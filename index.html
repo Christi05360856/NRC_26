@@ -57,7 +57,6 @@
 
       <p class="about-text">Every generation receives a faith, a heritage and a fire from those who walked with God before us. A generation is rising that must know God, love His Word, and carry the fire forward.</p>
 
-      <!-- NUCLEAR OPTION: onclick directly on button, no data attributes -->
       <button type="button" class="btn-primary btn-full" onclick="goNext()">Begin Registration &rarr;</button>
       <p class="micro-note">Takes about 2 minutes</p>
     </div>
@@ -255,29 +254,23 @@
   </div>
 </div>
 
-<!-- ===== ALL NAVIGATION LOGIC INLINE — NO EXTERNAL DEPENDENCY ===== -->
+<!-- ===== NAVIGATION LOGIC — RUNS IMMEDIATELY, NO WAITING ON ANYTHING ===== -->
 <script>
-/* NYC 2026 Registration — Inline Navigation */
-var currentIndex = 0;
-var steps = [];
-var progressFill = null;
-var feeOtherBlock = null;
-var volunteerBlock = null;
-var successOverlay = null;
-var form = null;
+/* NYC 2026 Registration — Inline Navigation
+   Runs the instant the browser reaches this line — does NOT wait
+   for DOMContentLoaded, fonts, or script.js. Since this script sits
+   after all the form HTML above it, every element it needs already
+   exists in the DOM by the time this line executes. */
 
-function initNav() {
-  steps = Array.from(document.querySelectorAll(".step"));
-  progressFill = document.getElementById("progressFill");
-  feeOtherBlock = document.getElementById("feeOtherBlock");
-  volunteerBlock = document.getElementById("volunteerBlock");
-  successOverlay = document.getElementById("successOverlay");
-  form = document.getElementById("regForm");
-  showStep(0);
-}
+var steps = Array.from(document.querySelectorAll(".step"));
+var progressFill = document.getElementById("progressFill");
+var feeOtherBlock = document.getElementById("feeOtherBlock");
+var volunteerBlock = document.getElementById("volunteerBlock");
+var successOverlay = document.getElementById("successOverlay");
+var form = document.getElementById("regForm");
+var currentIndex = 0;
 
 function showStep(index) {
-  if (!steps.length) return;
   steps.forEach(function(s, i) {
     s.classList.toggle("active", i === index);
   });
@@ -288,32 +281,25 @@ function showStep(index) {
   currentIndex = index;
 }
 
-function currentStepValid() {
-  return form ? form.reportValidity() : true;
-}
-
 function goNext() {
-  if (!currentStepValid()) return;
-  if (currentIndex < steps.length - 1) {
-    showStep(currentIndex + 1);
-  }
+  if (!form.reportValidity()) return;
+  if (currentIndex < steps.length - 1) showStep(currentIndex + 1);
 }
 
 function goBack() {
-  if (currentIndex > 0) {
-    showStep(currentIndex - 1);
-  }
+  if (currentIndex > 0) showStep(currentIndex - 1);
 }
 
 function copyAcct() {
   var acctNum = document.getElementById("acctNum");
   if (!acctNum) return;
   var text = acctNum.textContent.trim();
+  var btn = document.querySelector('.support-card button');
+  function flash() {
+    if (btn) { btn.textContent = "Copied ✓"; setTimeout(function(){ btn.textContent = "Copy account number"; }, 1800); }
+  }
   if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(function() {
-      var btn = document.querySelector('.support-card button');
-      if (btn) { btn.textContent = "Copied ✓"; setTimeout(function(){ btn.textContent = "Copy account number"; }, 1800); }
-    });
+    navigator.clipboard.writeText(text).then(flash);
   } else {
     var ta = document.createElement("textarea");
     ta.value = text;
@@ -321,60 +307,50 @@ function copyAcct() {
     ta.select();
     document.execCommand("copy");
     document.body.removeChild(ta);
-    var btn = document.querySelector('.support-card button');
-    if (btn) { btn.textContent = "Copied ✓"; setTimeout(function(){ btn.textContent = "Copy account number"; }, 1800); }
+    flash();
   }
 }
 
 function closeSuccess() {
   if (successOverlay) successOverlay.classList.remove("show");
-  if (form) form.reset();
+  form.reset();
   if (feeOtherBlock) feeOtherBlock.classList.remove("show");
   if (volunteerBlock) volunteerBlock.classList.remove("show");
   showStep(0);
 }
 
-// Fee toggle
 document.querySelectorAll('input[name="fee"]').forEach(function(radio) {
   radio.addEventListener("change", function() {
     if (feeOtherBlock) feeOtherBlock.classList.toggle("show", radio.value === "Others");
   });
 });
 
-// Volunteer toggle
 document.querySelectorAll('input[name="volunteer"]').forEach(function(radio) {
   radio.addEventListener("change", function() {
     if (volunteerBlock) volunteerBlock.classList.toggle("show", radio.value === "Yes");
   });
 });
 
-// Form submit
-document.getElementById("regForm").addEventListener("submit", function(e) {
+form.addEventListener("submit", function(e) {
   e.preventDefault();
   if (!form.reportValidity()) return;
   var btn = document.getElementById("submitBtn");
   var status = document.getElementById("statusMsg");
   if (btn) { btn.disabled = true; btn.textContent = "Submitting…"; }
   if (status) status.textContent = "";
-  // Try to submit via external script.js if it loaded
   if (typeof window._nycSubmit === "function") {
     window._nycSubmit();
   } else {
-    // Fallback: just show success overlay
     if (successOverlay) successOverlay.classList.add("show");
     if (btn) { btn.disabled = false; btn.textContent = "Complete Registration 🔥"; }
   }
 });
 
-// Initialize when DOM is ready
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", initNav);
-} else {
-  initNav();
-}
+showStep(0);
 </script>
 
-<!-- External script for Firebase (optional, loads after inline) -->
-<script src="script.js"></script>
+<!-- External Firebase script — deferred so it NEVER blocks the page above -->
+<script src="script.js" defer></script>
 </body>
-  </html>
+        </html>
+        
