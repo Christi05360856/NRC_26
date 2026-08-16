@@ -1,5 +1,7 @@
 // ============================================================
-// FIREBASE — loaded LAZILY (only when the user actually submits)
+// FIREBASE — loaded LAZILY (only when user submits)
+// This script is OPTIONAL. The inline script in index.html
+// handles all navigation. This file only adds Firebase submit.
 // ============================================================
 const firebaseConfig = {
   apiKey: "AIzaSyAgmrQl_89WilbnudAMdrwmICos1Gc2VwE",
@@ -30,63 +32,54 @@ function loadFirebase() {
   return _firebaseLoading;
 }
 
-// ============================================================
-// SUBMIT → FIRESTORE
-// The inline script in HTML already handles navigation.
-// This script only adds the Firebase submission on form submit.
-// ============================================================
-const form = document.getElementById("regForm");
-const submitBtn = document.getElementById("submitBtn");
-const statusMsg = document.getElementById("statusMsg");
-const successOverlay = document.getElementById("successOverlay");
+// Expose submit function so inline script can call it
+window._nycSubmit = async function() {
+  const form = document.getElementById("regForm");
+  const submitBtn = document.getElementById("submitBtn");
+  const statusMsg = document.getElementById("statusMsg");
+  const successOverlay = document.getElementById("successOverlay");
 
-if (form && submitBtn) {
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    if (!form.reportValidity()) return;
+  if (!form) return;
 
-    const data = Object.fromEntries(new FormData(form).entries());
+  const data = Object.fromEntries(new FormData(form).entries());
 
-    const payload = {
-      fullName: data.fullName || "",
-      gender: data.gender || "",
-      dob: data.dob || "",
-      phone: data.phone || "",
-      church: data.church || "",
-      branch: data.branch || "",
-      state: data.state || "",
-      occupation: data.occupation || "",
-      attending: data.attending || "",
-      feeCategory:
-        data.fee === "Others"
-          ? data.feeOtherAmount
-            ? `Others: ₦${data.feeOtherAmount}`
-            : "Others"
-          : data.fee || "",
-      volunteer: data.volunteer || "",
-      volunteerUnit: data.volunteer === "Yes" ? data.volunteerUnit || "" : ""
-    };
+  const payload = {
+    fullName: data.fullName || "",
+    gender: data.gender || "",
+    dob: data.dob || "",
+    phone: data.phone || "",
+    church: data.church || "",
+    branch: data.branch || "",
+    state: data.state || "",
+    occupation: data.occupation || "",
+    attending: data.attending || "",
+    feeCategory:
+      data.fee === "Others"
+        ? data.feeOtherAmount
+          ? `Others: ₦${data.feeOtherAmount}`
+          : "Others"
+        : data.fee || "",
+    volunteer: data.volunteer || "",
+    volunteerUnit: data.volunteer === "Yes" ? data.volunteerUnit || "" : ""
+  };
 
-    submitBtn.disabled = true;
-    submitBtn.textContent = "Submitting…";
-    if (statusMsg) statusMsg.textContent = "";
-
-    try {
-      const { collection, addDoc, serverTimestamp } = await loadFirebase();
-      payload.submittedAt = serverTimestamp();
-      await addDoc(collection(_db, REGISTRATIONS_COLLECTION), payload);
-      if (successOverlay) successOverlay.classList.add("show");
-    } catch (err) {
-      console.error("Registration failed:", err);
-      if (statusMsg) {
-        statusMsg.textContent = "Couldn't submit — your connection may be too slow right now. Please try again.";
-        statusMsg.style.color = "#C24444";
-      }
-    } finally {
+  try {
+    const { collection, addDoc, serverTimestamp } = await loadFirebase();
+    payload.submittedAt = serverTimestamp();
+    await addDoc(collection(_db, REGISTRATIONS_COLLECTION), payload);
+    if (successOverlay) successOverlay.classList.add("show");
+  } catch (err) {
+    console.error("Registration failed:", err);
+    if (statusMsg) {
+      statusMsg.textContent = "Couldn't submit — your connection may be too slow right now. Please try again.";
+      statusMsg.style.color = "#C24444";
+    }
+  } finally {
+    if (submitBtn) {
       submitBtn.disabled = false;
       submitBtn.textContent = "Complete Registration 🔥";
     }
-  });
-}
+  }
+};
 
-console.log("[NYC2026] External script loaded — Firebase submit handler attached.");
+console.log("[NYC2026] External script loaded — Firebase submit handler ready.");
