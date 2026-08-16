@@ -1,14 +1,7 @@
 // ============================================================
-// FIREBASE CONFIG — nyc-2026-registration project
+// FIREBASE — loaded LAZILY (only when the user actually submits)
+// so a slow/blocked CDN fetch can never break page navigation.
 // ============================================================
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-import {
-  getFirestore,
-  collection,
-  addDoc,
-  serverTimestamp
-} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
-
 const firebaseConfig = {
   apiKey: "AIzaSyAgmrQl_89WilbnudAMdrwmICos1Gc2VwE",
   authDomain: "nyc-2026-registration.firebaseapp.com",
@@ -17,10 +10,26 @@ const firebaseConfig = {
   messagingSenderId: "668244488462",
   appId: "1:668244488462:web:b2f2612cfb5159ef01275f"
 };
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
 const REGISTRATIONS_COLLECTION = "registrations";
+
+let _db = null;
+let _firestoreFns = null;
+let _firebaseLoading = null;
+
+function loadFirebase() {
+  if (_firebaseLoading) return _firebaseLoading;
+  _firebaseLoading = (async () => {
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js");
+    const { getFirestore, collection, addDoc, serverTimestamp } = await import(
+      "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js"
+    );
+    const app = initializeApp(firebaseConfig);
+    _db = getFirestore(app);
+    _firestoreFns = { collection, addDoc, serverTimestamp };
+    return _firestoreFns;
+  })();
+  return _firebaseLoading;
+}
 
 // ============================================================
 // STEP NAVIGATION
@@ -122,8 +131,7 @@ form.addEventListener("submit", async (e) => {
           : "Others"
         : data.fee || "",
     volunteer: data.volunteer || "",
-    volunteerUnit: data.volunteer === "Yes" ? data.volunteerUnit || "" : "",
-    submittedAt: serverTimestamp()
+    volunteerUnit: data.volunteer === "Yes" ? data.volunteerUnit || "" : ""
   };
 
   submitBtn.disabled = true;
@@ -131,11 +139,13 @@ form.addEventListener("submit", async (e) => {
   statusMsg.textContent = "";
 
   try {
-    await addDoc(collection(db, REGISTRATIONS_COLLECTION), payload);
+    const { collection, addDoc, serverTimestamp } = await loadFirebase();
+    payload.submittedAt = serverTimestamp();
+    await addDoc(collection(_db, REGISTRATIONS_COLLECTION), payload);
     successOverlay.classList.add("show");
   } catch (err) {
     console.error("Registration failed:", err);
-    statusMsg.textContent = "Something went wrong — check your connection and try again.";
+    statusMsg.textContent = "Couldn't submit — your connection may be too slow right now. Please try again.";
     statusMsg.style.color = "#C24444";
   } finally {
     submitBtn.disabled = false;
