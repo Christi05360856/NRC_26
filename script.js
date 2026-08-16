@@ -52,6 +52,7 @@ function currentStepValid() {
   return form.reportValidity();
 }
 
+// Attach click handlers to all [data-next] buttons
 document.querySelectorAll("[data-next]").forEach((btn) => {
   btn.addEventListener("click", () => {
     if (!currentStepValid()) return;
@@ -59,6 +60,7 @@ document.querySelectorAll("[data-next]").forEach((btn) => {
   });
 });
 
+// Attach click handlers to all [data-back] buttons
 document.querySelectorAll("[data-back]").forEach((btn) => {
   btn.addEventListener("click", () => {
     if (currentIndex > 0) showStep(currentIndex - 1);
@@ -92,13 +94,26 @@ document.querySelectorAll('input[name="volunteer"]').forEach((radio) => {
 // ============================================================
 const copyBtn = document.getElementById("copyBtn");
 const acctNum = document.getElementById("acctNum");
-copyBtn.addEventListener("click", () => {
-  navigator.clipboard.writeText(acctNum.textContent.trim()).then(() => {
-    const original = copyBtn.textContent;
-    copyBtn.textContent = "Copied ✓";
-    setTimeout(() => (copyBtn.textContent = original), 1800);
+if (copyBtn && acctNum) {
+  copyBtn.addEventListener("click", () => {
+    navigator.clipboard.writeText(acctNum.textContent.trim()).then(() => {
+      const original = copyBtn.textContent;
+      copyBtn.textContent = "Copied ✓";
+      setTimeout(() => (copyBtn.textContent = original), 1800);
+    }).catch(() => {
+      // Fallback for older browsers
+      const textArea = document.createElement("textarea");
+      textArea.value = acctNum.textContent.trim();
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textArea);
+      const original = copyBtn.textContent;
+      copyBtn.textContent = "Copied ✓";
+      setTimeout(() => (copyBtn.textContent = original), 1800);
+    });
   });
-});
+}
 
 // ============================================================
 // SUBMIT → FIRESTORE
@@ -153,10 +168,12 @@ form.addEventListener("submit", async (e) => {
   }
 });
 
-closeSuccess.addEventListener("click", () => {
-  successOverlay.classList.remove("show");
-  form.reset();
-  feeOtherBlock.classList.remove("show");
-  volunteerBlock.classList.remove("show");
-  showStep(0);
-});
+if (closeSuccess) {
+  closeSuccess.addEventListener("click", () => {
+    successOverlay.classList.remove("show");
+    form.reset();
+    feeOtherBlock.classList.remove("show");
+    volunteerBlock.classList.remove("show");
+    showStep(0);
+  });
+}
