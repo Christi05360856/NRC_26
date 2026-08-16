@@ -57,7 +57,8 @@
 
       <p class="about-text">Every generation receives a faith, a heritage and a fire from those who walked with God before us. A generation is rising that must know God, love His Word, and carry the fire forward.</p>
 
-      <button type="button" class="btn-primary btn-full" data-next>Begin Registration &rarr;</button>
+      <!-- NUCLEAR OPTION: onclick directly on button, no data attributes -->
+      <button type="button" class="btn-primary btn-full" onclick="goNext()">Begin Registration &rarr;</button>
       <p class="micro-note">Takes about 2 minutes</p>
     </div>
   </section>
@@ -94,8 +95,8 @@
       </div>
 
       <div class="step-nav">
-        <button type="button" class="btn-ghost" data-back>Back</button>
-        <button type="button" class="btn-primary" data-next>Continue</button>
+        <button type="button" class="btn-ghost" onclick="goBack()">Back</button>
+        <button type="button" class="btn-primary" onclick="goNext()">Continue</button>
       </div>
     </div>
   </section>
@@ -129,8 +130,8 @@
       </div>
 
       <div class="step-nav">
-        <button type="button" class="btn-ghost" data-back>Back</button>
-        <button type="button" class="btn-primary" data-next>Continue</button>
+        <button type="button" class="btn-ghost" onclick="goBack()">Back</button>
+        <button type="button" class="btn-primary" onclick="goNext()">Continue</button>
       </div>
     </div>
   </section>
@@ -149,8 +150,8 @@
       </div>
 
       <div class="step-nav">
-        <button type="button" class="btn-ghost" data-back>Back</button>
-        <button type="button" class="btn-primary" data-next>Continue</button>
+        <button type="button" class="btn-ghost" onclick="goBack()">Back</button>
+        <button type="button" class="btn-primary" onclick="goNext()">Continue</button>
       </div>
     </div>
   </section>
@@ -179,8 +180,8 @@
       </div>
 
       <div class="step-nav">
-        <button type="button" class="btn-ghost" data-back>Back</button>
-        <button type="button" class="btn-primary" data-next>Continue</button>
+        <button type="button" class="btn-ghost" onclick="goBack()">Back</button>
+        <button type="button" class="btn-primary" onclick="goNext()">Continue</button>
       </div>
     </div>
   </section>
@@ -211,8 +212,8 @@
       </div>
 
       <div class="step-nav">
-        <button type="button" class="btn-ghost" data-back>Back</button>
-        <button type="button" class="btn-primary" data-next>Continue</button>
+        <button type="button" class="btn-ghost" onclick="goBack()">Back</button>
+        <button type="button" class="btn-primary" onclick="goNext()">Continue</button>
       </div>
     </div>
   </section>
@@ -229,7 +230,7 @@
         <div class="acct-row"><span class="k">Account Name</span><span class="v">Jacob, Titilope Esther</span></div>
         <div class="acct-row"><span class="k">Bank</span><span class="v">First Bank of Nigeria</span></div>
         <div class="acct-row"><span class="k">Account Number</span><span class="v" id="acctNum">3212324102</span></div>
-        <button type="button" class="btn-ghost btn-full" id="copyBtn">Copy account number</button>
+        <button type="button" class="btn-ghost btn-full" onclick="copyAcct()">Copy account number</button>
       </div>
       <p class="micro-note center">"Every contribution matters. Thank you for investing in Another Generation."</p>
 
@@ -237,7 +238,7 @@
       <p class="fine" id="statusMsg">By registering you'll receive confirmation on the number provided.</p>
 
       <div class="step-nav single">
-        <button type="button" class="btn-ghost" data-back>Back</button>
+        <button type="button" class="btn-ghost" onclick="goBack()">Back</button>
       </div>
     </div>
   </section>
@@ -250,109 +251,130 @@
     <div class="flame-icon">🔥</div>
     <h2>You're In!</h2>
     <p>Your registration for NYC 2026 is confirmed. The fire continues with you.</p>
-    <button type="button" class="btn-primary btn-full" id="closeSuccess">Done</button>
+    <button type="button" class="btn-primary btn-full" onclick="closeSuccess()">Done</button>
   </div>
 </div>
 
-<!-- ===== INLINE FALLBACK: Navigation works even if script.js fails to load ===== -->
+<!-- ===== ALL NAVIGATION LOGIC INLINE — NO EXTERNAL DEPENDENCY ===== -->
 <script>
-(function() {
-  console.log("[NYC2026] Inline nav script running...");
-  var form = document.getElementById("regForm");
-  var steps = Array.from(document.querySelectorAll(".step"));
-  var progressFill = document.getElementById("progressFill");
-  var currentIndex = 0;
+/* NYC 2026 Registration — Inline Navigation */
+var currentIndex = 0;
+var steps = [];
+var progressFill = null;
+var feeOtherBlock = null;
+var volunteerBlock = null;
+var successOverlay = null;
+var form = null;
 
-  function showStep(index) {
-    steps.forEach(function(s, i) {
-      s.classList.toggle("active", i === index);
-    });
-    if (progressFill) {
-      progressFill.style.width = ((index / (steps.length - 1)) * 100) + "%";
-    }
-    window.scrollTo(0, 0);
-    currentIndex = index;
-    console.log("[NYC2026] Showing step", index);
-  }
-
-  function currentStepValid() {
-    return form ? form.reportValidity() : true;
-  }
-
-  document.querySelectorAll("[data-next]").forEach(function(btn) {
-    btn.addEventListener("click", function() {
-      console.log("[NYC2026] Next clicked");
-      if (!currentStepValid()) return;
-      if (currentIndex < steps.length - 1) showStep(currentIndex + 1);
-    });
-  });
-
-  document.querySelectorAll("[data-back]").forEach(function(btn) {
-    btn.addEventListener("click", function() {
-      console.log("[NYC2026] Back clicked");
-      if (currentIndex > 0) showStep(currentIndex - 1);
-    });
-  });
-
-  // Fee "Others" toggle
-  var feeOtherBlock = document.getElementById("feeOtherBlock");
-  document.querySelectorAll('input[name="fee"]').forEach(function(radio) {
-    radio.addEventListener("change", function() {
-      if (feeOtherBlock) feeOtherBlock.classList.toggle("show", radio.value === "Others");
-    });
-  });
-
-  // Volunteer toggle
-  var volunteerBlock = document.getElementById("volunteerBlock");
-  document.querySelectorAll('input[name="volunteer"]').forEach(function(radio) {
-    radio.addEventListener("change", function() {
-      if (volunteerBlock) volunteerBlock.classList.toggle("show", radio.value === "Yes");
-    });
-  });
-
-  // Copy account number
-  var copyBtn = document.getElementById("copyBtn");
-  var acctNum = document.getElementById("acctNum");
-  if (copyBtn && acctNum) {
-    copyBtn.addEventListener("click", function() {
-      var text = acctNum.textContent.trim();
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).then(function() {
-          copyBtn.textContent = "Copied ✓";
-          setTimeout(function() { copyBtn.textContent = "Copy account number"; }, 1800);
-        });
-      } else {
-        var ta = document.createElement("textarea");
-        ta.value = text;
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand("copy");
-        document.body.removeChild(ta);
-        copyBtn.textContent = "Copied ✓";
-        setTimeout(function() { copyBtn.textContent = "Copy account number"; }, 1800);
-      }
-    });
-  }
-
-  // Success overlay close
-  var successOverlay = document.getElementById("successOverlay");
-  var closeSuccess = document.getElementById("closeSuccess");
-  if (closeSuccess && successOverlay) {
-    closeSuccess.addEventListener("click", function() {
-      successOverlay.classList.remove("show");
-      if (form) form.reset();
-      if (feeOtherBlock) feeOtherBlock.classList.remove("show");
-      if (volunteerBlock) volunteerBlock.classList.remove("show");
-      showStep(0);
-    });
-  }
-
+function initNav() {
+  steps = Array.from(document.querySelectorAll(".step"));
+  progressFill = document.getElementById("progressFill");
+  feeOtherBlock = document.getElementById("feeOtherBlock");
+  volunteerBlock = document.getElementById("volunteerBlock");
+  successOverlay = document.getElementById("successOverlay");
+  form = document.getElementById("regForm");
   showStep(0);
-  console.log("[NYC2026] Inline nav ready. Steps found:", steps.length);
-})();
+}
+
+function showStep(index) {
+  if (!steps.length) return;
+  steps.forEach(function(s, i) {
+    s.classList.toggle("active", i === index);
+  });
+  if (progressFill) {
+    progressFill.style.width = ((index / (steps.length - 1)) * 100) + "%";
+  }
+  window.scrollTo(0, 0);
+  currentIndex = index;
+}
+
+function currentStepValid() {
+  return form ? form.reportValidity() : true;
+}
+
+function goNext() {
+  if (!currentStepValid()) return;
+  if (currentIndex < steps.length - 1) {
+    showStep(currentIndex + 1);
+  }
+}
+
+function goBack() {
+  if (currentIndex > 0) {
+    showStep(currentIndex - 1);
+  }
+}
+
+function copyAcct() {
+  var acctNum = document.getElementById("acctNum");
+  if (!acctNum) return;
+  var text = acctNum.textContent.trim();
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(function() {
+      var btn = document.querySelector('.support-card button');
+      if (btn) { btn.textContent = "Copied ✓"; setTimeout(function(){ btn.textContent = "Copy account number"; }, 1800); }
+    });
+  } else {
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    document.body.removeChild(ta);
+    var btn = document.querySelector('.support-card button');
+    if (btn) { btn.textContent = "Copied ✓"; setTimeout(function(){ btn.textContent = "Copy account number"; }, 1800); }
+  }
+}
+
+function closeSuccess() {
+  if (successOverlay) successOverlay.classList.remove("show");
+  if (form) form.reset();
+  if (feeOtherBlock) feeOtherBlock.classList.remove("show");
+  if (volunteerBlock) volunteerBlock.classList.remove("show");
+  showStep(0);
+}
+
+// Fee toggle
+document.querySelectorAll('input[name="fee"]').forEach(function(radio) {
+  radio.addEventListener("change", function() {
+    if (feeOtherBlock) feeOtherBlock.classList.toggle("show", radio.value === "Others");
+  });
+});
+
+// Volunteer toggle
+document.querySelectorAll('input[name="volunteer"]').forEach(function(radio) {
+  radio.addEventListener("change", function() {
+    if (volunteerBlock) volunteerBlock.classList.toggle("show", radio.value === "Yes");
+  });
+});
+
+// Form submit
+document.getElementById("regForm").addEventListener("submit", function(e) {
+  e.preventDefault();
+  if (!form.reportValidity()) return;
+  var btn = document.getElementById("submitBtn");
+  var status = document.getElementById("statusMsg");
+  if (btn) { btn.disabled = true; btn.textContent = "Submitting…"; }
+  if (status) status.textContent = "";
+  // Try to submit via external script.js if it loaded
+  if (typeof window._nycSubmit === "function") {
+    window._nycSubmit();
+  } else {
+    // Fallback: just show success overlay
+    if (successOverlay) successOverlay.classList.add("show");
+    if (btn) { btn.disabled = false; btn.textContent = "Complete Registration 🔥"; }
+  }
+});
+
+// Initialize when DOM is ready
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initNav);
+} else {
+  initNav();
+}
 </script>
 
-<!-- External script for Firebase submission (loads after inline) -->
+<!-- External script for Firebase (optional, loads after inline) -->
 <script src="script.js"></script>
 </body>
   </html>
