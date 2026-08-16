@@ -6,193 +6,235 @@
 <title>National Youth Congress 2026 — Registration</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Playfair+Display:ital,wght@1,600;1,700&family=Cormorant+Garamond:ital,wght@1,500;1,600&family=Work+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<!-- ================= HERO ================= -->
-<div class="hero">
-  <div class="sunburst" aria-hidden="true"></div>
-  <div class="hero-inner">
-    <div class="presents">Living Christ Disciples Assembly Int'l Youth Ministry<br>presents</div>
-    <div class="nc-mark">NYC<span class="nc-badge">26</span></div>
-    <div class="nc-full">National Youth Congress</div>
+<div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
 
-    <div class="theme-tag">Theme</div>
-    <h1 class="theme-title">Another<br>Generation:</h1>
-    <p class="theme-sub">Returning to the Faith That Built Us</p>
-    <p class="verse-ref">Judges 2:10</p>
+<form id="regForm">
 
-    <div class="hero-meta">
-      <span>📅 <b>3rd – 6th September 2026</b></span>
-      <span>📍 1–4 Calvary Avenue, Pipeline, Arepo, Ogun State</span>
+  <!-- ============ STEP 0 — WELCOME ============ -->
+  <section class="step active" data-step="0">
+    <div class="step-inner welcome">
+      <div class="flame-mark">
+        <svg viewBox="0 0 48 48" width="40" height="40" fill="none"><path d="M24 4C24 4 14 15 14 26C14 33.7 18.7 40 24 40C29.3 40 34 33.7 34 26C34 15 24 4 24 4Z" fill="#E8B03D"/><path d="M24 16C24 16 19 22.5 19 28.5C19 33 21.2 36 24 36C26.8 36 29 33 29 28.5C29 22.5 24 16 24 16Z" fill="#C8791F"/></svg>
+      </div>
+      <div class="eyebrow">Living Christ Disciples Assembly Int'l Youth Ministry</div>
+      <h1 class="hero-title">National Youth<br>Congress <span class="accent">2026</span></h1>
+      <p class="hero-theme">"Another Generation:<br>Returning to the Faith That Built Us"</p>
+      <p class="hero-verse">Judges 2:10</p>
+
+      <div class="hero-facts">
+        <div class="fact"><span class="fact-k">When</span><span class="fact-v">3rd – 6th September 2026</span></div>
+        <div class="fact"><span class="fact-k">Where</span><span class="fact-v">Calvary Group of Schools, Pipeline, Arepo, Ogun State</span></div>
+      </div>
+
+      <blockquote class="fire-quote">
+        "The fire that burns in one generation must not become ashes in the next."
+        <cite>— Billy Graham</cite>
+      </blockquote>
+
+      <p class="about-text">Every generation receives a faith, a heritage and a fire from those who walked with God before us. A generation is rising that must know God, love His Word, and carry the fire forward.</p>
+
+      <button type="button" class="btn-primary btn-full" data-next>Begin Registration →</button>
+      <p class="micro-note">Takes about 2 minutes</p>
     </div>
-  </div>
-</div>
+  </section>
 
-<!-- ================= ABOUT ================= -->
-<div class="about-wrap">
-  <blockquote class="fire-quote">
-    "The fire that burns in one generation must not become ashes in the next."
-    <cite>— Billy Graham</cite>
-  </blockquote>
+  <!-- ============ STEP 1 — PERSONAL DETAILS ============ -->
+  <section class="step" data-step="1">
+    <div class="step-inner">
+      <div class="step-head">
+        <span class="step-tag">01 / Personal Details</span>
+        <h2>Tell us who you are</h2>
+      </div>
 
-  <h2 class="about-heading">🔥 The Fire Must Not Die</h2>
-  <div class="about-body">
-    <p>Every generation receives a responsibility. We have received a faith, a heritage, a fire and a foundation from those who walked with God before us.</p>
-    <p>But the question is: what will we pass on? Will the fire continue burning, or will it become ashes in our hands?</p>
-    <p>This is the burden of National Youth Congress 2026. A generation is rising that must know God, love His Word, embrace holiness, return to prayer, and carry the fire forward.</p>
-  </div>
-</div>
+      <div class="field">
+        <label for="fullName">Full Name</label>
+        <input type="text" id="fullName" name="fullName" required placeholder="e.g. John Adewale">
+      </div>
 
-<!-- ================= PROGRESS RAIL ================= -->
-<div class="rail-wrap" aria-hidden="true">
-  <div class="rail-dot" id="dot1"></div>
-  <div class="rail-dot" id="dot2"></div>
-  <div class="rail-dot" id="dot3"></div>
-  <div class="rail-dot" id="dot4"></div>
-  <div class="rail-dot" id="dot5"></div>
-</div>
+      <div class="field">
+        <label>Gender</label>
+        <div class="opt-row">
+          <label class="opt"><input type="radio" name="gender" value="Male" required><span class="opt-inner"><span class="opt-label">Male</span><span class="dot"></span></span></label>
+          <label class="opt"><input type="radio" name="gender" value="Female"><span class="opt-inner"><span class="opt-label">Female</span><span class="dot"></span></span></label>
+        </div>
+      </div>
 
-<!-- ================= FORM ================= -->
-<form class="wrap" id="regForm">
+      <div class="field">
+        <label for="dob">Date of Birth</label>
+        <input type="date" id="dob" name="dob" required>
+      </div>
 
-  <!-- SECTION 1 -->
-  <div class="section" data-track="1">
-    <div class="section-head"><div class="section-num">1</div><h2>Participant Information</h2></div>
+      <div class="field">
+        <label for="phone">Phone / WhatsApp Number</label>
+        <input type="tel" id="phone" name="phone" required placeholder="0803 123 4567">
+      </div>
 
-    <div class="field">
-      <label>Full Name <span class="req">*</span></label>
-      <input type="text" name="fullName" required>
-    </div>
-
-    <div class="field">
-      <label>Gender <span class="req">*</span></label>
-      <div class="choice-row">
-        <label class="choice"><input type="radio" name="gender" value="Male" required><span class="pill">Male</span></label>
-        <label class="choice"><input type="radio" name="gender" value="Female"><span class="pill">Female</span></label>
+      <div class="step-nav">
+        <button type="button" class="btn-ghost" data-back>Back</button>
+        <button type="button" class="btn-primary" data-next>Continue</button>
       </div>
     </div>
+  </section>
 
-    <div class="field">
-      <label>Date of Birth <span class="req">*</span></label>
-      <input type="date" name="dob" required>
-    </div>
+  <!-- ============ STEP 2 — BACKGROUND ============ -->
+  <section class="step" data-step="2">
+    <div class="step-inner">
+      <div class="step-head">
+        <span class="step-tag">02 / Background</span>
+        <h2>Where do you serve?</h2>
+      </div>
 
-    <div class="field">
-      <label>Phone / WhatsApp Number <span class="req">*</span></label>
-      <input type="tel" name="phone" placeholder="e.g. 0803 123 4567" required>
-    </div>
+      <div class="field">
+        <label for="church">Church / Assembly</label>
+        <input type="text" id="church" name="church" required>
+      </div>
 
-    <div class="field">
-      <label>Church / Assembly <span class="req">*</span></label>
-      <input type="text" name="church" required>
-    </div>
+      <div class="field">
+        <label for="branch">Branch / Location</label>
+        <input type="text" id="branch" name="branch" required>
+      </div>
 
-    <div class="field">
-      <label>Branch / Location <span class="req">*</span></label>
-      <input type="text" name="branch" required>
-    </div>
+      <div class="field">
+        <label for="state">State of Residence</label>
+        <input type="text" id="state" name="state" required>
+      </div>
 
-    <div class="field">
-      <label>State of Residence <span class="req">*</span></label>
-      <input type="text" name="state" required>
-    </div>
+      <div class="field">
+        <label for="occupation">Occupation / School</label>
+        <input type="text" id="occupation" name="occupation" required>
+      </div>
 
-    <div class="field">
-      <label>Occupation / School <span class="req">*</span></label>
-      <input type="text" name="occupation" required>
-    </div>
-  </div>
-
-  <!-- SECTION 2 -->
-  <div class="section" data-track="2">
-    <div class="section-head"><div class="section-num">2</div><h2>Congress Logistics</h2></div>
-    <div class="section-sub">Will you be attending the Congress in person?</div>
-    <div class="choice-row">
-      <label class="choice"><input type="radio" name="attending" value="Yes" required><span class="pill">✅ Yes, I'll be there</span></label>
-      <label class="choice"><input type="radio" name="attending" value="No"><span class="pill">No</span></label>
-    </div>
-  </div>
-
-  <!-- SECTION 3 -->
-  <div class="section" data-track="3">
-    <div class="section-head"><div class="section-num">3</div><h2>Registration Fee</h2></div>
-    <div class="section-sub">Select your registration category</div>
-    <div class="fee-grid" id="feeGrid">
-      <label class="fee-card"><input type="radio" name="fee" value="₦2,000" required><span class="box"><span class="amt">₦2,000</span></span></label>
-      <label class="fee-card"><input type="radio" name="fee" value="₦3,000"><span class="box"><span class="amt">₦3,000</span></span></label>
-      <label class="fee-card"><input type="radio" name="fee" value="₦5,000"><span class="box"><span class="amt">₦5,000</span></span></label>
-      <label class="fee-card"><input type="radio" name="fee" value="₦10,000"><span class="box"><span class="amt">₦10,000</span></span></label>
-      <label class="fee-card"><input type="radio" name="fee" value="₦20,000"><span class="box"><span class="amt">₦20,000</span></span></label>
-      <label class="fee-card"><input type="radio" name="fee" value="₦50,000"><span class="box"><span class="amt">₦50,000</span></span></label>
-      <label class="fee-card wide"><input type="radio" name="fee" value="Others"><span class="box"><span class="amt">Others</span></span></label>
-    </div>
-    <div id="feeOtherBlock" class="field fee-other">
-      <label>Please specify amount (₦)</label>
-      <input type="number" name="feeOtherAmount" placeholder="e.g. 15000">
-    </div>
-  </div>
-
-  <!-- SECTION 4 -->
-  <div class="section" data-track="4">
-    <div class="section-head"><div class="section-num">4</div><h2>Call for Volunteers</h2></div>
-    <div class="section-sub">Are you interested in serving during the Congress?</div>
-    <div class="choice-row">
-      <label class="choice"><input type="radio" name="volunteer" value="Yes" required><span class="pill">🙋 Yes, I'll serve</span></label>
-      <label class="choice"><input type="radio" name="volunteer" value="No"><span class="pill">Not this time</span></label>
-    </div>
-
-    <div id="volunteerBlock" class="field" style="margin-top:16px;">
-      <label>Preferred unit</label>
-      <div class="unit-grid">
-        <label class="unit-card"><input type="radio" name="volunteerUnit" value="Sanitation / Sanctuary Keeper"><span class="box"><span class="ic">🧹</span>Sanitation / Sanctuary</span></label>
-        <label class="unit-card"><input type="radio" name="volunteerUnit" value="Electronics & Electrical"><span class="box"><span class="ic">⚡</span>Electronics & Electrical</span></label>
-        <label class="unit-card"><input type="radio" name="volunteerUnit" value="Medical Unit"><span class="box"><span class="ic">🩺</span>Medical Unit</span></label>
-        <label class="unit-card"><input type="radio" name="volunteerUnit" value="Hostel Coordinator"><span class="box"><span class="ic">🏠</span>Hostel Coordinator</span></label>
-        <label class="unit-card"><input type="radio" name="volunteerUnit" value="Servers / Kitchen"><span class="box"><span class="ic">🍽️</span>Servers / Kitchen</span></label>
-        <label class="unit-card"><input type="radio" name="volunteerUnit" value="Security / Protocol"><span class="box"><span class="ic">🛡️</span>Security / Protocol</span></label>
+      <div class="step-nav">
+        <button type="button" class="btn-ghost" data-back>Back</button>
+        <button type="button" class="btn-primary" data-next>Continue</button>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- SECTION 5 -->
-  <div class="section" data-track="5">
-    <div class="section-head"><div class="section-num">5</div><h2>Sponsorship & Support</h2></div>
-    <div class="support-card">
-      <h3>Give toward NYC 2026</h3>
-      <div class="acct-row"><span class="k">Account Name</span><span class="v">Jacob, Titilope Esther</span></div>
-      <div class="acct-row"><span class="k">Bank</span><span class="v">First Bank of Nigeria</span></div>
-      <div class="acct-row"><span class="k">Account Number</span><span class="v" id="acctNum">3212324102</span></div>
-      <button type="button" class="copy-btn" id="copyBtn">Copy account number</button>
-      <p class="support-note">"Every contribution matters. Thank you for investing in Another Generation."</p>
+  <!-- ============ STEP 3 — ATTENDANCE ============ -->
+  <section class="step" data-step="3">
+    <div class="step-inner">
+      <div class="step-head">
+        <span class="step-tag">03 / Logistics</span>
+        <h2>Will you be attending the Congress in person?</h2>
+      </div>
+
+      <div class="opt-col">
+        <label class="opt"><input type="radio" name="attending" value="Yes" required><span class="opt-inner"><span class="opt-label">Yes, I'll be there</span><span class="dot"></span></span></label>
+        <label class="opt"><input type="radio" name="attending" value="No"><span class="opt-inner"><span class="opt-label">No</span><span class="dot"></span></span></label>
+      </div>
+
+      <div class="step-nav">
+        <button type="button" class="btn-ghost" data-back>Back</button>
+        <button type="button" class="btn-primary" data-next>Continue</button>
+      </div>
     </div>
-  </div>
+  </section>
 
-  <div class="submit-wrap">
-    <button type="submit" class="submit-btn" id="submitBtn">Complete Registration →</button>
-    <p class="fine" id="statusMsg">By registering you'll receive confirmation on the number provided.</p>
-  </div>
+  <!-- ============ STEP 4 — FEE ============ -->
+  <section class="step" data-step="4">
+    <div class="step-inner">
+      <div class="step-head">
+        <span class="step-tag">04 / Registration Fee</span>
+        <h2>Select your registration category</h2>
+      </div>
+
+      <div class="opt-col" id="feeList">
+        <label class="opt"><input type="radio" name="fee" value="₦2,000" required><span class="opt-inner"><span class="opt-label">₦2,000</span><span class="dot"></span></span></label>
+        <label class="opt"><input type="radio" name="fee" value="₦3,000"><span class="opt-inner"><span class="opt-label">₦3,000</span><span class="dot"></span></span></label>
+        <label class="opt"><input type="radio" name="fee" value="₦5,000"><span class="opt-inner"><span class="opt-label">₦5,000</span><span class="dot"></span></span></label>
+        <label class="opt"><input type="radio" name="fee" value="₦10,000"><span class="opt-inner"><span class="opt-label">₦10,000</span><span class="dot"></span></span></label>
+        <label class="opt"><input type="radio" name="fee" value="₦20,000"><span class="opt-inner"><span class="opt-label">₦20,000</span><span class="dot"></span></span></label>
+        <label class="opt"><input type="radio" name="fee" value="₦50,000"><span class="opt-inner"><span class="opt-label">₦50,000</span><span class="dot"></span></span></label>
+        <label class="opt"><input type="radio" name="fee" value="Others"><span class="opt-inner"><span class="opt-label">Others</span><span class="dot"></span></span></label>
+      </div>
+
+      <div class="field fee-other" id="feeOtherBlock">
+        <label for="feeOtherAmount">Specify amount (₦)</label>
+        <input type="number" id="feeOtherAmount" name="feeOtherAmount" placeholder="e.g. 15000">
+      </div>
+
+      <div class="step-nav">
+        <button type="button" class="btn-ghost" data-back>Back</button>
+        <button type="button" class="btn-primary" data-next>Continue</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ STEP 5 — VOLUNTEERING ============ -->
+  <section class="step" data-step="5">
+    <div class="step-inner">
+      <div class="step-head">
+        <span class="step-tag">05 / Call for Volunteers</span>
+        <h2>Interested in serving during the Congress?</h2>
+      </div>
+
+      <div class="opt-col">
+        <label class="opt"><input type="radio" name="volunteer" value="Yes" required><span class="opt-inner"><span class="opt-label">Yes, I'll serve</span><span class="dot"></span></span></label>
+        <label class="opt"><input type="radio" name="volunteer" value="No"><span class="opt-inner"><span class="opt-label">Not this time</span><span class="dot"></span></span></label>
+      </div>
+
+      <div class="field" id="volunteerBlock">
+        <label>Preferred unit</label>
+        <div class="opt-col">
+          <label class="opt unit"><input type="radio" name="volunteerUnit" value="Sanitation / Sanctuary Keeper"><span class="opt-inner"><span class="opt-label"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 20l6-6M9 15l7-11 3 3-11 7z"/><path d="M17 7l3-3"/></svg>Sanitation / Sanctuary</span><span class="dot"></span></span></label>
+          <label class="opt unit"><input type="radio" name="volunteerUnit" value="Electronics & Electrical"><span class="opt-inner"><span class="opt-label"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z"/></svg>Electronics & Electrical</span><span class="dot"></span></span></label>
+          <label class="opt unit"><input type="radio" name="volunteerUnit" value="Medical Unit"><span class="opt-inner"><span class="opt-label"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 21s-7-4.4-9.5-8.8C.7 8.6 2.3 5 6 5c2 0 3.5 1.2 4 2.5C10.5 6.2 12 5 14 5c3.7 0 5.3 3.6 3.5 7.2C15 16.6 12 21 12 21z"/></svg>Medical Unit</span><span class="dot"></span></span></label>
+          <label class="opt unit"><input type="radio" name="volunteerUnit" value="Hostel Coordinator"><span class="opt-inner"><span class="opt-label"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>Hostel Coordinator</span><span class="dot"></span></span></label>
+          <label class="opt unit"><input type="radio" name="volunteerUnit" value="Servers / Kitchen"><span class="opt-inner"><span class="opt-label"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Servers / Kitchen</span><span class="dot"></span></span></label>
+          <label class="opt unit"><input type="radio" name="volunteerUnit" value="Security / Protocol"><span class="opt-inner"><span class="opt-label"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2l8 3v6c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V5l8-3z"/></svg>Security / Protocol</span><span class="dot"></span></span></label>
+        </div>
+      </div>
+
+      <div class="step-nav">
+        <button type="button" class="btn-ghost" data-back>Back</button>
+        <button type="button" class="btn-primary" data-next>Continue</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ STEP 6 — SUPPORT & SUBMIT ============ -->
+  <section class="step" data-step="6">
+    <div class="step-inner">
+      <div class="step-head">
+        <span class="step-tag">06 / Sponsorship & Support</span>
+        <h2>Give toward NYC 2026</h2>
+      </div>
+
+      <div class="support-card">
+        <div class="acct-row"><span class="k">Account Name</span><span class="v">Jacob, Titilope Esther</span></div>
+        <div class="acct-row"><span class="k">Bank</span><span class="v">First Bank of Nigeria</span></div>
+        <div class="acct-row"><span class="k">Account Number</span><span class="v" id="acctNum">3212324102</span></div>
+        <button type="button" class="btn-ghost btn-full" id="copyBtn">Copy account number</button>
+      </div>
+      <p class="micro-note center">"Every contribution matters. Thank you for investing in Another Generation."</p>
+
+      <button type="submit" class="btn-primary btn-full" id="submitBtn">Complete Registration 🔥</button>
+      <p class="fine" id="statusMsg">By registering you'll receive confirmation on the number provided.</p>
+
+      <div class="step-nav single">
+        <button type="button" class="btn-ghost" data-back>Back</button>
+      </div>
+    </div>
+  </section>
+
 </form>
 
-<!-- ================= SUCCESS OVERLAY ================= -->
+<!-- ============ SUCCESS OVERLAY ============ -->
 <div class="success-overlay" id="successOverlay">
   <div class="success-card">
     <div class="flame-icon">🔥</div>
     <h2>You're In!</h2>
     <p>Your registration for NYC 2026 is confirmed. The fire continues with you.</p>
-    <button type="button" class="submit-btn" onclick="document.getElementById('successOverlay').classList.remove('show')">Close</button>
+    <button type="button" class="btn-primary btn-full" id="closeSuccess">Done</button>
   </div>
 </div>
 
-<div class="foot">
-  <b>National Youth Congress 2026</b>
-  Calvary Group of Schools · Pipeline, Arepo, Ogun State<br>
-  3rd – 6th September 2026
-</div>
-
-<!-- Firebase (modular SDK via CDN) -->
 <script type="module" src="script.js"></script>
 </body>
 </html>
