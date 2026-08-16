@@ -281,8 +281,16 @@ function showStep(index) {
   currentIndex = index;
 }
 
+function validateStep(index) {
+  var inputs = steps[index].querySelectorAll("input, select, textarea");
+  for (var i = 0; i < inputs.length; i++) {
+    if (!inputs[i].reportValidity()) return false;
+  }
+  return true;
+}
+
 function goNext() {
-  if (!form.reportValidity()) return;
+  if (!validateStep(currentIndex)) return;
   if (currentIndex < steps.length - 1) showStep(currentIndex + 1);
 }
 
@@ -353,4 +361,5 @@ showStep(0);
 <script src="script.js" defer></script>
 </body>
         </html>
-        
+
+  
