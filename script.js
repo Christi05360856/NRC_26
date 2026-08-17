@@ -56,6 +56,30 @@ function formatRegNumberForCard(regNumber) {
   return (regNumber || "").replace("-", "  ·  ");
 }
 
+// Fills in and shows the reg card overlay. Used both right after a
+// successful submission and when an existing registrant looks their
+// card up via "Find your card".
+function renderCard(regNumber, fullName, feeCategory) {
+  const cardRegNumber = document.getElementById("cardRegNumber");
+  const cardName = document.getElementById("cardName");
+  const cardCategory = document.getElementById("cardCategory");
+  const cardQr = document.getElementById("cardQr");
+  const successOverlay = document.getElementById("successOverlay");
+  if (cardRegNumber) cardRegNumber.textContent = formatRegNumberForCard(regNumber);
+  if (cardName) cardName.textContent = fullName;
+  if (cardCategory) cardCategory.textContent = feeCategory;
+  if (cardQr) {
+    cardQr.src = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" + encodeURIComponent(regNumber);
+  }
+  if (successOverlay) successOverlay.classList.add("show");
+}
+
+function normalizeRegNumberForSearch(raw) {
+  let v = (raw || "").trim().toUpperCase();
+  if (v && !v.startsWith("NYC26-")) v = "NYC26-" + v;
+  return v;
+}
+
 // Expose submit function so inline script can call it
 window._nycSubmit = async function() {
   const form = document.getElementById("regForm");
@@ -132,19 +156,9 @@ window._nycSubmit = async function() {
     payload.submittedAt = serverTimestamp();
     await withTimeout(setDoc(docRef, payload), 20000);
 
-    const cardRegNumber = document.getElementById("cardRegNumber");
-    const cardName = document.getElementById("cardName");
-    const cardCategory = document.getElementById("cardCategory");
-    const cardQr = document.getElementById("cardQr");
-    if (cardRegNumber) cardRegNumber.textContent = formatRegNumberForCard(regNumber);
-    if (cardName) cardName.textContent = fullName;
-    if (cardCategory) cardCategory.textContent = feeCategory;
-    if (cardQr) {
-      const qrData = encodeURIComponent(regNumber);
-      cardQr.src = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" + qrData;
-    }
-
-    if (successOverlay) successOverlay.classList.add("show");
+    window._nycCardOverlayReason = "submit";
+    renderCard(regNumber, fullName, feeCategory);
+    if (typeof window._nycClearDraft === "function") window._nycClearDraft();
   } catch (err) {
     console.error("Registration failed:", err);
     let msg;
@@ -166,6 +180,75 @@ window._nycSubmit = async function() {
       submitBtn.disabled = false;
       submitBtn.textContent = "Complete Registration 🔥";
     }
+  }
+};
+
+// Looks up an existing registration so someone who lost their card
+// screenshot can get it back. Two modes only, on purpose:
+//  - "regnumber": exact match, safest, preferred when they have it.
+//  - "namephone": same field pair already used for duplicate detection
+//    at submit time, so it doesn't open up any query shape the security
+//    rules weren't already trusting. A name-only search is intentionally
+//    NOT offered — it would let anyone who knows/guesses a name pull up
+//    that person's phone number, church, and other details.
+window._nycFindCard = async function(mode, values) {
+  const errEl = document.getElementById("findCardError");
+  const btn = document.getElementById("findCardBtn");
+  if (errEl) { errEl.textContent = ""; errEl.classList.remove("show"); }
+
+  let regNumber = "", nameNorm = "", phoneNorm = "";
+  if (mode === "regnumber") {
+    regNumber = normalizeRegNumberForSearch(values.regNumber);
+    if (!regNumber || regNumber === "NYC26-") {
+      if (errEl) { errEl.textContent = "Enter your registration number."; errEl.classList.add("show"); }
+      return;
+    }
+  } else {
+    const fullName = (values.fullName || "").trim();
+    const phone = (values.phone || "").trim();
+    nameNorm = fullName.toLowerCase().replace(/\s+/g, " ");
+    phoneNorm = phone.replace(/[^\d]/g, "");
+    if (!nameNorm || !phoneNorm) {
+      if (errEl) { errEl.textContent = "Enter both your full name and phone number."; errEl.classList.add("show"); }
+      return;
+    }
+  }
+
+  if (btn) { btn.disabled = true; btn.textContent = "Searching…"; }
+  try {
+    const { collection, query, where, getDocs, limit } = await withTimeout(loadFirebase(), 20000);
+    const q = mode === "regnumber"
+      ? query(collection(_db, REGISTRATIONS_COLLECTION), where("regNumber", "==", regNumber), limit(1))
+      : query(
+          collection(_db, REGISTRATIONS_COLLECTION),
+          where("phoneNorm", "==", phoneNorm),
+          where("nameNorm", "==", nameNorm),
+          limit(1)
+        );
+    const snap = await withTimeout(getDocs(q), 20000);
+    if (snap.empty) {
+      if (errEl) {
+        errEl.textContent = "No registration found with those details. Double-check them, or scroll down to register.";
+        errEl.classList.add("show");
+      }
+      return;
+    }
+    const d = snap.docs[0].data();
+    window._nycCardOverlayReason = "find";
+    renderCard(d.regNumber, d.fullName, d.feeCategory);
+  } catch (err) {
+    console.error("Find card failed:", err);
+    let msg;
+    if (err && err.code === "app/timeout") {
+      msg = "This is taking longer than usual — check your connection and try again.";
+    } else if (typeof navigator !== "undefined" && navigator.onLine === false) {
+      msg = "You appear to be offline. Reconnect and try again.";
+    } else {
+      msg = "Search failed — please try again." + (err && err.code ? " (ref: " + err.code + ")" : "");
+    }
+    if (errEl) { errEl.textContent = msg; errEl.classList.add("show"); }
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = "Find my card"; }
   }
 };
 
