@@ -38,8 +38,6 @@ function loadFirebase() {
     const app = initializeApp(firebaseConfig);
     _db = getFirestore(app);
     _auth = getAuth(app);
-    // Anonymous sign-in — invisible to the registrant, but satisfies the
-    // security rule that requires request.auth != null for the duplicate check.
     if (!_auth.currentUser) {
       await signInAnonymously(_auth);
     }
@@ -49,20 +47,10 @@ function loadFirebase() {
   return _firebaseLoading;
 }
 
-// Formats a stored reg number like "NYC26-AJTZBL" into the card's display
-// form "NYC26 · AJTZBL". The dash-joined form is still what's used for
-// lookups/search everywhere else — this is purely cosmetic for the card face.
 function formatRegNumberForCard(regNumber) {
   return (regNumber || "").replace("-", "  ·  ");
 }
 
-// Turns a same-origin-friendly image URL into a base64 data: URL.
-// The QR image comes from a third-party API, and even with crossorigin="anonymous"
-// set on the <img>, some CDNs omit permissive CORS headers on the actual response —
-// which silently taints the canvas and makes html2canvas's toDataURL() throw or
-// export a blank card. Fetching the bytes ourselves and handing back a data: URL
-// sidesteps that entirely: a data: URL never taints a canvas, regardless of what
-// headers the original server sent.
 function toDataUrl(url) {
   return fetch(url, { mode: "cors" })
     .then(function(res) {
@@ -88,21 +76,33 @@ function renderCard(regNumber, fullName, feeCategory) {
   const cardCategory = document.getElementById("cardCategory");
   const cardQr = document.getElementById("cardQr");
   const successOverlay = document.getElementById("successOverlay");
+
+  // Populate live card
   if (cardRegNumber) cardRegNumber.textContent = formatRegNumberForCard(regNumber);
   if (cardName) cardName.textContent = fullName;
   if (cardCategory) cardCategory.textContent = feeCategory;
 
+  // Populate hidden export card
+  const cardRegNumberExport = document.getElementById("cardRegNumberExport");
+  const cardNameExport = document.getElementById("cardNameExport");
+  const cardCategoryExport = document.getElementById("cardCategoryExport");
+  const cardQrExport = document.getElementById("cardQrExport");
+
+  if (cardRegNumberExport) cardRegNumberExport.textContent = formatRegNumberForCard(regNumber);
+  if (cardNameExport) cardNameExport.textContent = fullName;
+  if (cardCategoryExport) cardCategoryExport.textContent = feeCategory;
+
   if (cardQr) {
-    // Request well above display size (58–64px on screen) so the PNG
-    // stays crisp under the 4x+ scale used for screenshots/downloads.
     const qrApiUrl = "https://api.qrserver.com/v1/create-qr-code/?size=400x400&margin=0&data=" + encodeURIComponent(regNumber);
     toDataUrl(qrApiUrl)
-      .then(function(dataUrl) { cardQr.src = dataUrl; })
+      .then(function(dataUrl) {
+        cardQr.src = dataUrl;
+        if (cardQrExport) cardQrExport.src = dataUrl;
+      })
       .catch(function(err) {
         console.warn("QR data-URL fetch failed, falling back to direct src:", err);
-        // Best-effort fallback — the QR may not survive html2canvas export in
-        // this case, but the card is still fully readable without it.
         cardQr.src = qrApiUrl;
+        if (cardQrExport) cardQrExport.src = qrApiUrl;
       });
   }
 
@@ -158,11 +158,6 @@ window._nycSubmit = async function() {
   try {
     const { collection, doc, setDoc, serverTimestamp, query, where, getDocs, limit } = await withTimeout(loadFirebase(), 20000);
 
-    // Block only exact same person (same phone + same name) registering twice.
-    // A different name on the same phone (e.g. registering a friend) is allowed.
-    // limit(1) is required — the security rule only allows list queries that
-    // carry an explicit cap (request.query.limit <= 5); an unbounded query
-    // has request.query.limit == null and gets denied as insufficient permission.
     const dupQuery = query(
       collection(_db, REGISTRATIONS_COLLECTION),
       where("phoneNorm", "==", phoneNorm),
@@ -218,14 +213,6 @@ window._nycSubmit = async function() {
   }
 };
 
-// Looks up an existing registration so someone who lost their card
-// screenshot can get it back. Two modes only, on purpose:
-//  - "regnumber": exact match, safest, preferred when they have it.
-//  - "namephone": same field pair already used for duplicate detection
-//    at submit time, so it doesn't open up any query shape the security
-//    rules weren't already trusting. A name-only search is intentionally
-//    NOT offered — it would let anyone who knows/guesses a name pull up
-//    that person's phone number, church, and other details.
 window._nycFindCard = async function(mode, values) {
   const errEl = document.getElementById("findCardError");
   const btn = document.getElementById("findCardBtn");
@@ -289,9 +276,4 @@ window._nycFindCard = async function(mode, values) {
 
 console.log("[NYC2026] External script loaded — Firebase submit handler ready.");
 
-// Start fetching Firebase in the background the moment this script runs,
-// instead of waiting for submit. On a weak connection, the worst possible
-// time to first load the SDK is the moment someone hits "Complete
-// Registration" — this way it's usually already cached by then, since
-// filling the form takes ~2 minutes.
 loadFirebase().catch(function() { /* real errors resurface at submit time */ });
