@@ -131,12 +131,15 @@ window._nycSubmit = async function() {
   const nameNorm = fullName.toLowerCase().replace(/\s+/g, " ");
   const phoneNorm = phone.replace(/[^\d]/g, "");
 
+  const isInvitee = data.fee === "Invitee";
   const feeCategory =
-    data.fee === "Others"
-      ? data.feeOtherAmount
-        ? `Others: ₦${data.feeOtherAmount}`
-        : "Others"
-      : data.fee || "";
+    isInvitee
+      ? "INVITEE"
+      : data.fee === "Others"
+        ? data.feeOtherAmount
+          ? `Others: ₦${data.feeOtherAmount}`
+          : "Others"
+        : data.fee || "";
 
   const payload = {
     fullName: fullName,
@@ -151,6 +154,7 @@ window._nycSubmit = async function() {
     occupation: data.occupation || "",
     attending: data.attending || "",
     feeCategory: feeCategory,
+    isInvitee: isInvitee,
     volunteer: data.volunteer || "",
     volunteerUnit: data.volunteer === "Yes" ? data.volunteerUnit || "" : ""
   };
@@ -277,3 +281,4 @@ window._nycFindCard = async function(mode, values) {
 console.log("[NYC2026] External script loaded — Firebase submit handler ready.");
 
 loadFirebase().catch(function() { /* real errors resurface at submit time */ });
+  
