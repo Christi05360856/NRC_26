@@ -41,6 +41,31 @@
   .status-pill.not-checked{background:rgba(194,68,68,0.12); color:var(--red);}
   .status-pill.checked{background:rgba(62,142,90,0.12); color:var(--green);}
   .not-found{color:var(--muted); font-size:14px; text-align:center; padding:8px 0;}
+
+  .tab-bar{display:flex; gap:8px; margin-bottom:16px;}
+  .tab-btn{flex:1; padding:11px; border-radius:10px; border:1.5px solid var(--line); background:var(--card); color:var(--muted); font-size:13px; font-weight:700;}
+  .tab-btn.active{border-color:var(--gold); color:var(--gold); background:rgba(200,149,26,0.08);}
+
+  .opt-row{display:flex; gap:8px; margin-bottom:14px;}
+  .opt-row label{flex:1; display:flex; align-items:center; justify-content:center; gap:6px; padding:12px; border-radius:10px; border:1.5px solid var(--line); font-size:13.5px; font-weight:600; color:var(--text-soft); cursor:pointer; margin:0;}
+  .opt-row input{width:auto; margin:0; accent-color:var(--gold);}
+  .check-row{display:flex; align-items:center; gap:8px; margin-bottom:14px; font-size:13.5px; font-weight:600; color:var(--text-soft);}
+  .check-row input{width:auto; margin:0; accent-color:var(--gold);}
+  fieldset{border:none; padding:0; margin:0 0 4px;}
+  legend{font-size:13px; font-weight:600; color:var(--text-soft); margin-bottom:6px; padding:0;}
+
+  .dup-warning{background:rgba(200,149,26,0.08); border:1.5px solid var(--gold); border-radius:10px; padding:14px; margin-bottom:14px; font-size:13.5px; color:var(--text-soft);}
+  .dup-warning b{display:block; color:var(--text); margin-bottom:8px;}
+
+  .walkin-success{text-align:center;}
+  .walkin-success .big-no{font-family:'Sora',sans-serif; font-size:26px; font-weight:800; color:var(--gold); margin:4px 0 2px;}
+  .walkin-success .big-name{font-size:15px; font-weight:600; color:var(--text-soft); margin:0 0 16px;}
+
+  .recent-list{list-style:none; margin:0; padding:0;}
+  .recent-list li{display:flex; justify-content:space-between; padding:8px 0; border-top:1px solid var(--line); font-size:12.5px;}
+  .recent-list li:first-child{border-top:none;}
+  .recent-list .rn{font-weight:700; color:var(--gold);}
+  .recent-empty{color:var(--muted); font-size:13px; text-align:center; padding:4px 0;}
 </style>
 </head>
 <body>
@@ -66,6 +91,12 @@
       <button type="button" class="btn-ghost" id="logoutBtn">Log out</button>
     </div>
 
+    <div class="tab-bar">
+      <button type="button" class="tab-btn active" id="tabCheckIn">Check-In</button>
+      <button type="button" class="tab-btn" id="tabWalkin">Walk-in Registration</button>
+    </div>
+
+    <div id="checkInSection">
     <div class="card">
       <label for="regInput">Registration number</label>
       <input type="text" id="regInput" placeholder="e.g. NYC26-4F9B2C" autocomplete="off" autocapitalize="characters">
@@ -89,6 +120,120 @@
     <div class="card hidden" id="notFoundCard">
       <p class="not-found">No registration found for that number. Double-check it, or have them registered manually and entered into the site later.</p>
     </div>
+    </div>
+
+    <!-- WALK-IN REGISTRATION (hidden until tab selected) -->
+    <div id="walkinSection" class="hidden">
+
+      <div class="card hidden" id="walkinDupWarning">
+        <div class="dup-warning">
+          <b>Already registered</b>
+          <span id="dupText"></span>
+        </div>
+        <button type="button" class="btn-primary" id="dupGoToCheckInBtn">Go to Check-In</button>
+        <button type="button" class="btn-ghost" id="dupDismissBtn">Enter different person</button>
+      </div>
+
+      <div class="card hidden" id="walkinSuccessCard">
+        <div class="walkin-success">
+          <span class="status-pill checked">Registered &amp; checked in</span>
+          <p class="big-no" id="walkinSuccessNo">—</p>
+          <p class="big-name" id="walkinSuccessName">—</p>
+          <button type="button" class="btn-primary" id="walkinAnotherBtn">Register Next Person</button>
+        </div>
+      </div>
+
+      <form class="card" id="walkinForm">
+        <label for="wFullName">Full Name</label>
+        <input type="text" id="wFullName" required>
+
+        <fieldset>
+          <legend>Gender</legend>
+          <div class="opt-row">
+            <label><input type="radio" name="wGender" value="Male" required> Male</label>
+            <label><input type="radio" name="wGender" value="Female"> Female</label>
+          </div>
+        </fieldset>
+
+        <label for="wDob">Date of Birth</label>
+        <input type="date" id="wDob" required>
+
+        <label for="wPhone">Phone / WhatsApp Number</label>
+        <input type="tel" id="wPhone" required placeholder="0803 123 4567">
+
+        <label for="wChurch">Church / Assembly</label>
+        <input type="text" id="wChurch" required>
+
+        <label for="wBranch">Branch / Location</label>
+        <input type="text" id="wBranch" required>
+
+        <label for="wState">State of Residence</label>
+        <input type="text" id="wState" required>
+
+        <label for="wOccupation">Occupation / School</label>
+        <input type="text" id="wOccupation" required>
+
+        <fieldset>
+          <legend>Attending in person?</legend>
+          <div class="opt-row">
+            <label><input type="radio" name="wAttending" value="Yes" required> Yes</label>
+            <label><input type="radio" name="wAttending" value="No"> No</label>
+          </div>
+        </fieldset>
+
+        <label for="wFee">Registration Category</label>
+        <select id="wFee" required style="width:100%; padding:13px 14px; border-radius:10px; border:1.5px solid var(--line); font-size:16px; margin-bottom:14px; font-family:inherit;">
+          <option value="">Select…</option>
+          <option value="₦2,000">₦2,000</option>
+          <option value="₦3,000">₦3,000</option>
+          <option value="₦5,000">₦5,000</option>
+          <option value="₦10,000">₦10,000</option>
+          <option value="₦20,000">₦20,000</option>
+          <option value="₦50,000">₦50,000</option>
+          <option value="Others">Others</option>
+        </select>
+        <div id="wFeeOtherBlock" class="hidden">
+          <label for="wFeeOtherAmount">Specify amount (₦)</label>
+          <input type="number" id="wFeeOtherAmount">
+        </div>
+
+        <fieldset>
+          <legend>Interested in volunteering?</legend>
+          <div class="opt-row">
+            <label><input type="radio" name="wVolunteer" value="Yes" required> Yes</label>
+            <label><input type="radio" name="wVolunteer" value="No"> Not this time</label>
+          </div>
+        </fieldset>
+        <div id="wVolunteerBlock" class="hidden">
+          <label for="wVolunteerUnit">Preferred unit</label>
+          <select id="wVolunteerUnit" style="width:100%; padding:13px 14px; border-radius:10px; border:1.5px solid var(--line); font-size:16px; margin-bottom:14px; font-family:inherit;">
+            <option value="">Select…</option>
+            <option>Sanitation / Sanctuary Keeper</option>
+            <option>Electronics &amp; Electrical</option>
+            <option>Medical Unit</option>
+            <option>Hostel Coordinator</option>
+            <option>Servers / Kitchen</option>
+            <option>Security / Protocol</option>
+          </select>
+        </div>
+
+        <div class="check-row">
+          <input type="checkbox" id="wMarkCheckedIn" checked>
+          <label for="wMarkCheckedIn" style="margin:0;">Mark as checked in now (they're here at the desk)</label>
+        </div>
+
+        <p class="error" id="walkinError"></p>
+        <button type="submit" class="btn-primary" id="walkinSubmitBtn">Register Walk-in</button>
+      </form>
+
+      <div class="card" id="recentCard">
+        <label style="margin-bottom:10px;">Registered this session</label>
+        <ul class="recent-list" id="recentList"></ul>
+        <p class="recent-empty" id="recentEmpty">None yet.</p>
+      </div>
+
+    </div>
+
   </div>
 
 </div>
@@ -96,7 +241,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
-import { getFirestore, collection, query, where, getDocs, updateDoc, serverTimestamp, limit } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+import { getFirestore, collection, doc, setDoc, query, where, getDocs, updateDoc, serverTimestamp, limit } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAgmrQl_89WilbnudAMdrwmICos1Gc2VwE",
@@ -131,9 +276,6 @@ let currentDocRef = null;
 let currentData = null;
 
 onAuthStateChanged(auth, (user) => {
-  // Only real staff logins (email/password) unlock the desk — anonymous
-  // sessions from the public registration page never reach this branch
-  // because this page never signs in anonymously.
   if (user && user.email) {
     loginCard.classList.add("hidden");
     deskArea.classList.remove("hidden");
@@ -185,9 +327,6 @@ async function doSearch() {
   searchBtn.disabled = true;
   searchBtn.textContent = "Searching…";
   try {
-    // limit(1) is required — the security rule only allows list queries that
-    // carry an explicit cap (request.query.limit <= 5); an unbounded query
-    // has request.query.limit == null and gets denied as insufficient permission.
     const q = query(collection(db, REGISTRATIONS_COLLECTION), where("regNumber", "==", regNumber), limit(1));
     const snap = await getDocs(q);
     if (snap.empty) {
@@ -261,6 +400,187 @@ confirmBtn.addEventListener("click", async () => {
 searchBtn.addEventListener("click", doSearch);
 regInput.addEventListener("keydown", (e) => { if (e.key === "Enter") doSearch(); });
 loginPass.addEventListener("keydown", (e) => { if (e.key === "Enter") loginBtn.click(); });
+
+/* ================= TABS ================= */
+const tabCheckIn = document.getElementById("tabCheckIn");
+const tabWalkin = document.getElementById("tabWalkin");
+const checkInSection = document.getElementById("checkInSection");
+const walkinSection = document.getElementById("walkinSection");
+
+function showTab(tab) {
+  const isCheckIn = tab === "checkin";
+  tabCheckIn.classList.toggle("active", isCheckIn);
+  tabWalkin.classList.toggle("active", !isCheckIn);
+  checkInSection.classList.toggle("hidden", !isCheckIn);
+  walkinSection.classList.toggle("hidden", isCheckIn);
+}
+tabCheckIn.addEventListener("click", () => showTab("checkin"));
+tabWalkin.addEventListener("click", () => showTab("walkin"));
+
+/* ================= WALK-IN REGISTRATION ================= */
+// Lets the registration unit get someone into the system on the spot —
+// same schema and the same duplicate check the public form uses, so it
+// can never create a record the security rules wouldn't already accept.
+// After create, if "mark as checked in now" is ticked, it makes one more
+// allowed call (update, staff-only, checkedIn/checkedInAt/checkedInBy
+// only) to check them in immediately, since standing at the desk being
+// entered IS their check-in.
+
+const walkinForm = document.getElementById("walkinForm");
+const walkinError = document.getElementById("walkinError");
+const walkinSubmitBtn = document.getElementById("walkinSubmitBtn");
+const walkinDupWarning = document.getElementById("walkinDupWarning");
+const dupText = document.getElementById("dupText");
+const dupGoToCheckInBtn = document.getElementById("dupGoToCheckInBtn");
+const dupDismissBtn = document.getElementById("dupDismissBtn");
+const walkinSuccessCard = document.getElementById("walkinSuccessCard");
+const walkinSuccessNo = document.getElementById("walkinSuccessNo");
+const walkinSuccessName = document.getElementById("walkinSuccessName");
+const walkinAnotherBtn = document.getElementById("walkinAnotherBtn");
+const wFee = document.getElementById("wFee");
+const wFeeOtherBlock = document.getElementById("wFeeOtherBlock");
+const wFeeOtherAmount = document.getElementById("wFeeOtherAmount");
+const recentList = document.getElementById("recentList");
+const recentEmpty = document.getElementById("recentEmpty");
+
+let pendingDupRegNumber = null;
+const sessionRegistered = []; // in-memory only — resets on page reload, by design
+
+wFee.addEventListener("change", () => {
+  wFeeOtherBlock.classList.toggle("hidden", wFee.value !== "Others");
+});
+document.querySelectorAll('input[name="wVolunteer"]').forEach((r) => {
+  r.addEventListener("change", () => {
+    document.getElementById("wVolunteerBlock").classList.toggle("hidden", r.value !== "Yes");
+  });
+});
+
+function renderRecentList() {
+  recentList.innerHTML = "";
+  recentEmpty.classList.toggle("hidden", sessionRegistered.length > 0);
+  sessionRegistered.slice().reverse().forEach((entry) => {
+    const li = document.createElement("li");
+    li.innerHTML = `<span>${entry.name}</span><span class="rn">${entry.regNumber}</span>`;
+    recentList.appendChild(li);
+  });
+}
+
+function resetWalkinForm() {
+  walkinForm.reset();
+  wFeeOtherBlock.classList.add("hidden");
+  document.getElementById("wVolunteerBlock").classList.add("hidden");
+  document.getElementById("wMarkCheckedIn").checked = true;
+  walkinError.classList.remove("show");
+}
+
+walkinForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  walkinError.classList.remove("show");
+  walkinDupWarning.classList.add("hidden");
+  walkinSuccessCard.classList.add("hidden");
+
+  const fullName = document.getElementById("wFullName").value.trim();
+  const gender = walkinForm.querySelector('input[name="wGender"]:checked');
+  const dob = document.getElementById("wDob").value;
+  const phone = document.getElementById("wPhone").value.trim();
+  const church = document.getElementById("wChurch").value.trim();
+  const branch = document.getElementById("wBranch").value.trim();
+  const state = document.getElementById("wState").value.trim();
+  const occupation = document.getElementById("wOccupation").value.trim();
+  const attending = walkinForm.querySelector('input[name="wAttending"]:checked');
+  const volunteer = walkinForm.querySelector('input[name="wVolunteer"]:checked');
+  const volunteerUnit = document.getElementById("wVolunteerUnit").value;
+  const markCheckedIn = document.getElementById("wMarkCheckedIn").checked;
+
+  if (!fullName || !phone || !gender || !attending || !volunteer) {
+    walkinError.textContent = "Please fill in all required fields.";
+    walkinError.classList.add("show");
+    return;
+  }
+
+  const nameNorm = fullName.toLowerCase().replace(/\s+/g, " ");
+  const phoneNorm = phone.replace(/[^\d]/g, "");
+  const feeCategory = wFee.value === "Others"
+    ? (wFeeOtherAmount.value ? `Others: ₦${wFeeOtherAmount.value}` : "Others")
+    : wFee.value;
+
+  walkinSubmitBtn.disabled = true;
+  walkinSubmitBtn.textContent = "Checking…";
+
+  try {
+    // Same duplicate check the public form runs — keeps the desk from
+    // creating a second record for someone who already registered online.
+    const dupQuery = query(
+      collection(db, REGISTRATIONS_COLLECTION),
+      where("phoneNorm", "==", phoneNorm),
+      where("nameNorm", "==", nameNorm),
+      limit(1)
+    );
+    const dupSnap = await getDocs(dupQuery);
+    if (!dupSnap.empty) {
+      const existing = dupSnap.docs[0].data();
+      pendingDupRegNumber = existing.regNumber;
+      dupText.textContent = `${existing.fullName} is already registered as ${existing.regNumber}. Use Check-In instead of creating a new record.`;
+      walkinDupWarning.classList.remove("hidden");
+      return;
+    }
+
+    const docRef = doc(collection(db, REGISTRATIONS_COLLECTION));
+    const regNumber = "NYC26-" + docRef.id.slice(0, 6).toUpperCase();
+    const payload = {
+      fullName, gender: gender.value, dob, phone, phoneNorm, nameNorm,
+      church, branch, state, occupation,
+      attending: attending.value,
+      feeCategory,
+      volunteer: volunteer.value,
+      volunteerUnit: volunteer.value === "Yes" ? volunteerUnit : "",
+      regNumber,
+      checkedIn: false,
+      checkedInAt: null,
+      checkedInBy: null,
+      submittedAt: serverTimestamp()
+    };
+    await setDoc(docRef, payload);
+
+    if (markCheckedIn) {
+      await updateDoc(docRef, {
+        checkedIn: true,
+        checkedInAt: serverTimestamp(),
+        checkedInBy: auth.currentUser.email
+      });
+    }
+
+    sessionRegistered.push({ name: fullName, regNumber });
+    renderRecentList();
+
+    walkinSuccessNo.textContent = regNumber;
+    walkinSuccessName.textContent = fullName;
+    walkinSuccessCard.classList.remove("hidden");
+    resetWalkinForm();
+  } catch (err) {
+    console.error("Walk-in registration failed:", err);
+    walkinError.textContent = "Couldn't register — check your connection and try again.";
+    walkinError.classList.add("show");
+  } finally {
+    walkinSubmitBtn.disabled = false;
+    walkinSubmitBtn.textContent = "Register Walk-in";
+  }
+});
+
+dupGoToCheckInBtn.addEventListener("click", () => {
+  walkinDupWarning.classList.add("hidden");
+  showTab("checkin");
+  if (pendingDupRegNumber) {
+    regInput.value = pendingDupRegNumber;
+    doSearch();
+  }
+});
+dupDismissBtn.addEventListener("click", () => {
+  walkinDupWarning.classList.add("hidden");
+});
+walkinAnotherBtn.addEventListener("click", () => {
+  walkinSuccessCard.classList.add("hidden");
+});
 </script>
 </body>
 </html>
