@@ -21,12 +21,12 @@ function loadFirebase() {
   if (_firebaseLoading) return _firebaseLoading;
   _firebaseLoading = (async () => {
     const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js");
-    const { getFirestore, collection, addDoc, serverTimestamp } = await import(
+    const { getFirestore, collection, addDoc, serverTimestamp, query, where, getDocs } = await import(
       "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js"
     );
     const app = initializeApp(firebaseConfig);
     _db = getFirestore(app);
-    _firestoreFns = { collection, addDoc, serverTimestamp };
+    _firestoreFns = { collection, addDoc, serverTimestamp, query, where, getDocs };
     return _firestoreFns;
   })();
   return _firebaseLoading;
@@ -43,30 +43,74 @@ window._nycSubmit = async function() {
 
   const data = Object.fromEntries(new FormData(form).entries());
 
+  const fullName = (data.fullName || "").trim();
+  const phone = (data.phone || "").trim();
+  const nameNorm = fullName.toLowerCase().replace(/\s+/g, " ");
+  const phoneNorm = phone.replace(/[^\d]/g, "");
+
+  const feeCategory =
+    data.fee === "Others"
+      ? data.feeOtherAmount
+        ? `Others: ₦${data.feeOtherAmount}`
+        : "Others"
+      : data.fee || "";
+
   const payload = {
-    fullName: data.fullName || "",
+    fullName: fullName,
     gender: data.gender || "",
     dob: data.dob || "",
-    phone: data.phone || "",
+    phone: phone,
+    phoneNorm: phoneNorm,
+    nameNorm: nameNorm,
     church: data.church || "",
     branch: data.branch || "",
     state: data.state || "",
     occupation: data.occupation || "",
     attending: data.attending || "",
-    feeCategory:
-      data.fee === "Others"
-        ? data.feeOtherAmount
-          ? `Others: ₦${data.feeOtherAmount}`
-          : "Others"
-        : data.fee || "",
+    feeCategory: feeCategory,
     volunteer: data.volunteer || "",
     volunteerUnit: data.volunteer === "Yes" ? data.volunteerUnit || "" : ""
   };
 
   try {
-    const { collection, addDoc, serverTimestamp } = await loadFirebase();
+    const { collection, addDoc, serverTimestamp, query, where, getDocs } = await loadFirebase();
+
+    // Block only exact same person (same phone + same name) registering twice.
+    // A different name on the same phone (e.g. registering a friend) is allowed.
+    const dupQuery = query(
+      collection(_db, REGISTRATIONS_COLLECTION),
+      where("phoneNorm", "==", phoneNorm),
+      where("nameNorm", "==", nameNorm)
+    );
+    const dupSnap = await getDocs(dupQuery);
+    if (!dupSnap.empty) {
+      if (statusMsg) {
+        statusMsg.textContent = "It looks like this name and number are already registered. Registering a friend? Use their name.";
+        statusMsg.style.color = "#C24444";
+      }
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Complete Registration 🔥";
+      }
+      return;
+    }
+
     payload.submittedAt = serverTimestamp();
-    await addDoc(collection(_db, REGISTRATIONS_COLLECTION), payload);
+    const docRef = await addDoc(collection(_db, REGISTRATIONS_COLLECTION), payload);
+
+    const regNumber = "NYC26-" + docRef.id.slice(0, 6).toUpperCase();
+    const cardRegNumber = document.getElementById("cardRegNumber");
+    const cardName = document.getElementById("cardName");
+    const cardCategory = document.getElementById("cardCategory");
+    const cardQr = document.getElementById("cardQr");
+    if (cardRegNumber) cardRegNumber.textContent = regNumber;
+    if (cardName) cardName.textContent = fullName;
+    if (cardCategory) cardCategory.textContent = feeCategory;
+    if (cardQr) {
+      const qrData = encodeURIComponent(regNumber + " | " + fullName);
+      cardQr.src = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" + qrData;
+    }
+
     if (successOverlay) successOverlay.classList.add("show");
   } catch (err) {
     console.error("Registration failed:", err);
