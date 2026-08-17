@@ -29,7 +29,7 @@ function loadFirebase() {
   if (_firebaseLoading) return _firebaseLoading;
   _firebaseLoading = (async () => {
     const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js");
-    const { getFirestore, collection, doc, setDoc, serverTimestamp, query, where, getDocs } = await import(
+    const { getFirestore, collection, doc, setDoc, serverTimestamp, query, where, getDocs, limit } = await import(
       "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js"
     );
     const { getAuth, signInAnonymously } = await import(
@@ -43,7 +43,7 @@ function loadFirebase() {
     if (!_auth.currentUser) {
       await signInAnonymously(_auth);
     }
-    _firestoreFns = { collection, doc, setDoc, serverTimestamp, query, where, getDocs };
+    _firestoreFns = { collection, doc, setDoc, serverTimestamp, query, where, getDocs, limit };
     return _firestoreFns;
   })();
   return _firebaseLoading;
@@ -97,14 +97,18 @@ window._nycSubmit = async function() {
   };
 
   try {
-    const { collection, doc, setDoc, serverTimestamp, query, where, getDocs } = await withTimeout(loadFirebase(), 20000);
+    const { collection, doc, setDoc, serverTimestamp, query, where, getDocs, limit } = await withTimeout(loadFirebase(), 20000);
 
     // Block only exact same person (same phone + same name) registering twice.
     // A different name on the same phone (e.g. registering a friend) is allowed.
+    // limit(1) is required — the security rule only allows list queries that
+    // carry an explicit cap (request.query.limit <= 5); an unbounded query
+    // has request.query.limit == null and gets denied as insufficient permission.
     const dupQuery = query(
       collection(_db, REGISTRATIONS_COLLECTION),
       where("phoneNorm", "==", phoneNorm),
-      where("nameNorm", "==", nameNorm)
+      where("nameNorm", "==", nameNorm),
+      limit(1)
     );
     const dupSnap = await withTimeout(getDocs(dupQuery), 20000);
     if (!dupSnap.empty) {
