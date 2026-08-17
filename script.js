@@ -49,6 +49,13 @@ function loadFirebase() {
   return _firebaseLoading;
 }
 
+// Formats a stored reg number like "NYC26-AJTZBL" into the card's display
+// form "NYC26 · AJTZBL". The dash-joined form is still what's used for
+// lookups/search everywhere else — this is purely cosmetic for the card face.
+function formatRegNumberForCard(regNumber) {
+  return (regNumber || "").replace("-", "  ·  ");
+}
+
 // Expose submit function so inline script can call it
 window._nycSubmit = async function() {
   const form = document.getElementById("regForm");
@@ -125,7 +132,7 @@ window._nycSubmit = async function() {
     const cardName = document.getElementById("cardName");
     const cardCategory = document.getElementById("cardCategory");
     const cardQr = document.getElementById("cardQr");
-    if (cardRegNumber) cardRegNumber.textContent = regNumber;
+    if (cardRegNumber) cardRegNumber.textContent = formatRegNumberForCard(regNumber);
     if (cardName) cardName.textContent = fullName;
     if (cardCategory) cardCategory.textContent = feeCategory;
     if (cardQr) {
