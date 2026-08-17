@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+<title>NYC 2026 — Check-In Desk</title>
+<meta name="robots" content="noindex, nofollow">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FAF8F4; --card:#FFFFFF; --gold:#C8951A; --amber:#B07812; --red:#C24444; --green:#3E8E5A;
+    --text:#1A1712; --text-soft:#3D3830; --muted:#8A8275; --line:rgba(26,23,18,0.12);
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; min-height:100dvh; padding:24px 16px;}
+  h1,h2{font-family:'Sora',sans-serif;}
+  .wrap{max-width:420px; margin:0 auto;}
+  .eyebrow{font-size:12px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--amber); margin-bottom:6px;}
+  h1{font-size:22px; margin:0 0 24px;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:20px; margin-bottom:16px; box-shadow:0 8px 24px -8px rgba(26,23,18,0.10);}
+  label{display:block; font-size:13px; font-weight:600; color:var(--text-soft); margin-bottom:6px;}
+  input{width:100%; padding:13px 14px; border-radius:10px; border:1.5px solid var(--line); font-size:16px; margin-bottom:14px; font-family:inherit;}
+  input:focus{outline:none; border-color:var(--gold);}
+  button{width:100%; padding:14px; border:none; border-radius:10px; font-weight:700; font-size:15px; cursor:pointer; font-family:inherit;}
+  .btn-primary{background:linear-gradient(135deg, var(--gold), var(--amber)); color:#fff;}
+  .btn-primary:disabled{opacity:0.5; cursor:not-allowed;}
+  .btn-ghost{background:transparent; border:1.5px solid var(--line); color:var(--muted); margin-top:8px;}
+  .error{color:var(--red); font-size:13px; margin:-6px 0 14px; display:none;}
+  .error.show{display:block;}
+  .hidden{display:none !important;}
+  .staff-bar{display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; font-size:12.5px; color:var(--muted);}
+  .staff-bar b{color:var(--text);}
+  .staff-bar button{width:auto; padding:8px 12px; font-size:12.5px;}
+  .result-name{font-size:19px; font-weight:700; font-family:'Sora',sans-serif; margin:0 0 4px;}
+  .result-no{font-size:13px; color:var(--gold); font-weight:700; margin:0 0 16px;}
+  .row{display:flex; justify-content:space-between; padding:9px 0; border-top:1px solid var(--line); font-size:13.5px;}
+  .row .k{color:var(--muted); font-weight:600;}
+  .row .v{font-weight:700; text-align:right;}
+  .status-pill{display:inline-block; padding:6px 12px; border-radius:20px; font-size:12.5px; font-weight:700; margin-bottom:16px;}
+  .status-pill.not-checked{background:rgba(194,68,68,0.12); color:var(--red);}
+  .status-pill.checked{background:rgba(62,142,90,0.12); color:var(--green);}
+  .not-found{color:var(--muted); font-size:14px; text-align:center; padding:8px 0;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow">NYC 2026 · Staff Only</div>
+  <h1>Registration Check-In</h1>
+
+  <!-- LOGIN -->
+  <div class="card" id="loginCard">
+    <label for="loginEmail">Email</label>
+    <input type="email" id="loginEmail" autocomplete="username">
+    <label for="loginPass">Password</label>
+    <input type="password" id="loginPass" autocomplete="current-password">
+    <p class="error" id="loginError"></p>
+    <button type="button" class="btn-primary" id="loginBtn">Log In</button>
+  </div>
+
+  <!-- CHECK-IN UI (hidden until logged in) -->
+  <div id="deskArea" class="hidden">
+    <div class="staff-bar">
+      <span>Logged in as <b id="staffEmail"></b></span>
+      <button type="button" class="btn-ghost" id="logoutBtn">Log out</button>
+    </div>
+
+    <div class="card">
+      <label for="regInput">Registration number</label>
+      <input type="text" id="regInput" placeholder="e.g. NYC26-4F9B2C" autocomplete="off" autocapitalize="characters">
+      <p class="error" id="searchError"></p>
+      <button type="button" class="btn-primary" id="searchBtn">Find</button>
+    </div>
+
+    <div class="card hidden" id="resultCard">
+      <div id="statusPillWrap"></div>
+      <p class="result-name" id="resName"></p>
+      <p class="result-no" id="resNo"></p>
+      <div class="row"><span class="k">Phone</span><span class="v" id="resPhone"></span></div>
+      <div class="row"><span class="k">Church</span><span class="v" id="resChurch"></span></div>
+      <div class="row"><span class="k">Branch / State</span><span class="v" id="resBranch"></span></div>
+      <div class="row"><span class="k">Category</span><span class="v" id="resCategory"></span></div>
+      <div class="row"><span class="k">Attending</span><span class="v" id="resAttending"></span></div>
+      <div class="row hidden" id="resCheckedRow"><span class="k">Checked in</span><span class="v" id="resCheckedInfo"></span></div>
+      <button type="button" class="btn-primary" id="confirmBtn" style="margin-top:18px;">Confirm Check-In</button>
+    </div>
+
+    <div class="card hidden" id="notFoundCard">
+      <p class="not-found">No registration found for that number. Double-check it, or have them registered manually and entered into the site later.</p>
+    </div>
+  </div>
+
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+import { getFirestore, collection, query, where, getDocs, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAgmrQl_89WilbnudAMdrwmICos1Gc2VwE",
+  authDomain: "nyc-2026-registration.firebaseapp.com",
+  projectId: "nyc-2026-registration",
+  storageBucket: "nyc-2026-registration.firebasestorage.app",
+  messagingSenderId: "668244488462",
+  appId: "1:668244488462:web:b2f2612cfb5159ef01275f"
+};
+const REGISTRATIONS_COLLECTION = "registrations";
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const loginCard = document.getElementById("loginCard");
+const deskArea = document.getElementById("deskArea");
+const loginEmail = document.getElementById("loginEmail");
+const loginPass = document.getElementById("loginPass");
+const loginError = document.getElementById("loginError");
+const loginBtn = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+const staffEmail = document.getElementById("staffEmail");
+const regInput = document.getElementById("regInput");
+const searchBtn = document.getElementById("searchBtn");
+const searchError = document.getElementById("searchError");
+const resultCard = document.getElementById("resultCard");
+const notFoundCard = document.getElementById("notFoundCard");
+const confirmBtn = document.getElementById("confirmBtn");
+
+let currentDocRef = null;
+let currentData = null;
+
+onAuthStateChanged(auth, (user) => {
+  // Only real staff logins (email/password) unlock the desk — anonymous
+  // sessions from the public registration page never reach this branch
+  // because this page never signs in anonymously.
+  if (user && user.email) {
+    loginCard.classList.add("hidden");
+    deskArea.classList.remove("hidden");
+    staffEmail.textContent = user.email;
+  } else {
+    loginCard.classList.remove("hidden");
+    deskArea.classList.add("hidden");
+  }
+});
+
+loginBtn.addEventListener("click", async () => {
+  loginError.classList.remove("show");
+  loginBtn.disabled = true;
+  loginBtn.textContent = "Logging in…";
+  try {
+    await signInWithEmailAndPassword(auth, loginEmail.value.trim(), loginPass.value);
+  } catch (err) {
+    loginError.textContent = "Login failed — check your email and password.";
+    loginError.classList.add("show");
+  } finally {
+    loginBtn.disabled = false;
+    loginBtn.textContent = "Log In";
+  }
+});
+
+logoutBtn.addEventListener("click", async () => {
+  await signOut(auth);
+  regInput.value = "";
+  resultCard.classList.add("hidden");
+  notFoundCard.classList.add("hidden");
+});
+
+function normalizeRegNumber(raw) {
+  let v = raw.trim().toUpperCase();
+  if (v && !v.startsWith("NYC26-")) v = "NYC26-" + v;
+  return v;
+}
+
+async function doSearch() {
+  searchError.classList.remove("show");
+  resultCard.classList.add("hidden");
+  notFoundCard.classList.add("hidden");
+  const regNumber = normalizeRegNumber(regInput.value);
+  if (!regNumber || regNumber === "NYC26-") {
+    searchError.textContent = "Enter a registration number.";
+    searchError.classList.add("show");
+    return;
+  }
+  searchBtn.disabled = true;
+  searchBtn.textContent = "Searching…";
+  try {
+    const q = query(collection(db, REGISTRATIONS_COLLECTION), where("regNumber", "==", regNumber));
+    const snap = await getDocs(q);
+    if (snap.empty) {
+      notFoundCard.classList.remove("hidden");
+      currentDocRef = null;
+      currentData = null;
+    } else {
+      const d = snap.docs[0];
+      currentDocRef = d.ref;
+      currentData = d.data();
+      renderResult(currentData);
+      resultCard.classList.remove("hidden");
+    }
+  } catch (err) {
+    console.error(err);
+    searchError.textContent = "Search failed — check your connection and try again.";
+    searchError.classList.add("show");
+  } finally {
+    searchBtn.disabled = false;
+    searchBtn.textContent = "Find";
+  }
+}
+
+function renderResult(data) {
+  document.getElementById("resName").textContent = data.fullName || "—";
+  document.getElementById("resNo").textContent = data.regNumber || "—";
+  document.getElementById("resPhone").textContent = data.phone || "—";
+  document.getElementById("resChurch").textContent = data.church || "—";
+  document.getElementById("resBranch").textContent = [data.branch, data.state].filter(Boolean).join(", ") || "—";
+  document.getElementById("resCategory").textContent = data.feeCategory || "—";
+  document.getElementById("resAttending").textContent = data.attending || "—";
+
+  const pillWrap = document.getElementById("statusPillWrap");
+  const checkedRow = document.getElementById("resCheckedRow");
+  const checkedInfo = document.getElementById("resCheckedInfo");
+
+  if (data.checkedIn) {
+    pillWrap.innerHTML = '<span class="status-pill checked">Already checked in</span>';
+    checkedRow.classList.remove("hidden");
+    checkedInfo.textContent = data.checkedInBy || "—";
+    confirmBtn.textContent = "Already Checked In";
+    confirmBtn.disabled = true;
+  } else {
+    pillWrap.innerHTML = '<span class="status-pill not-checked">Not checked in</span>';
+    checkedRow.classList.add("hidden");
+    confirmBtn.textContent = "Confirm Check-In";
+    confirmBtn.disabled = false;
+  }
+}
+
+confirmBtn.addEventListener("click", async () => {
+  if (!currentDocRef) return;
+  confirmBtn.disabled = true;
+  confirmBtn.textContent = "Checking in…";
+  try {
+    await updateDoc(currentDocRef, {
+      checkedIn: true,
+      checkedInAt: serverTimestamp(),
+      checkedInBy: auth.currentUser.email
+    });
+    currentData.checkedIn = true;
+    currentData.checkedInBy = auth.currentUser.email;
+    renderResult(currentData);
+  } catch (err) {
+    console.error(err);
+    confirmBtn.textContent = "Failed — tap to retry";
+    confirmBtn.disabled = false;
+  }
+});
+
+searchBtn.addEventListener("click", doSearch);
+regInput.addEventListener("keydown", (e) => { if (e.key === "Enter") doSearch(); });
+loginPass.addEventListener("keydown", (e) => { if (e.key === "Enter") loginBtn.click(); });
+</script>
+</body>
+</html>
