@@ -96,7 +96,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
-import { getFirestore, collection, query, where, getDocs, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+import { getFirestore, collection, query, where, getDocs, updateDoc, serverTimestamp, limit } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAgmrQl_89WilbnudAMdrwmICos1Gc2VwE",
@@ -185,7 +185,10 @@ async function doSearch() {
   searchBtn.disabled = true;
   searchBtn.textContent = "Searching…";
   try {
-    const q = query(collection(db, REGISTRATIONS_COLLECTION), where("regNumber", "==", regNumber));
+    // limit(1) is required — the security rule only allows list queries that
+    // carry an explicit cap (request.query.limit <= 5); an unbounded query
+    // has request.query.limit == null and gets denied as insufficient permission.
+    const q = query(collection(db, REGISTRATIONS_COLLECTION), where("regNumber", "==", regNumber), limit(1));
     const snap = await getDocs(q);
     if (snap.empty) {
       notFoundCard.classList.remove("hidden");
