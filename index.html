@@ -337,45 +337,6 @@
       </div>
     </div>
 
-    <!-- EXPORT-ONLY CARD (hidden, fixed-size, deterministic for html2canvas) -->
-    <div class="reg-card-export" id="regCardExport">
-      <div class="reg-card-export-stripes"></div>
-      <div class="reg-card-export-bg"></div>
-
-      <div class="reg-card-export-top">
-        <div class="reg-card-export-brand">
-          <svg viewBox="0 0 48 48" width="20" height="20" fill="none">
-            <path d="M24 4C24 4 14 15 14 26C14 33.7 18.7 40 24 40C29.3 40 34 33.7 34 26C34 15 24 4 24 4Z" fill="#F0D28A"/>
-            <path d="M24 16C24 16 19 22.5 19 28.5C19 33 21.2 36 24 36C26.8 36 29 33 29 28.5C29 22.5 24 16 24 16Z" fill="#9C7327"/>
-          </svg>
-          <span class="reg-card-export-event">NYC 2026</span>
-        </div>
-        <div class="reg-card-export-issuer">
-          <span class="reg-card-export-acronym">LCDAI</span>
-          <span class="reg-card-export-full">Living Christ Disciples Assembly Int'l</span>
-        </div>
-      </div>
-
-      <div class="reg-card-export-chip-row">
-        <div class="reg-card-export-chip"></div>
-        <svg class="reg-card-export-nfc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
-          <path d="M8.5 8.5a5 5 0 010 7"/>
-          <path d="M11.5 5.5a9 9 0 010 13"/>
-          <path d="M14.5 2.5a13 13 0 010 19"/>
-        </svg>
-      </div>
-
-      <div class="reg-card-export-no" id="cardRegNumberExport">—</div>
-      <div class="reg-card-export-name" id="cardNameExport">—</div>
-
-      <div class="reg-card-export-bottom">
-        <span class="reg-card-export-category" id="cardCategoryExport">—</span>
-        <div class="reg-card-export-qr">
-          <img id="cardQrExport" src="" alt="" width="52" height="52">
-        </div>
-      </div>
-    </div>
-
     <p class="micro-note center">Screenshot this card — you'll need it at the gate.</p>
     <button type="button" class="btn-ghost btn-full" id="downloadCardBtn" onclick="downloadCard()">Download card</button>
     <button type="button" class="btn-primary btn-full" onclick="closeSuccess()">Done</button>
@@ -560,40 +521,219 @@ form.addEventListener("input", function() {
 });
 form.addEventListener("change", saveDraft);
 
-/* ---- Download Card — captures hidden export card, NOT the live card ---- */
-  function downloadCard() {
-  var card = document.getElementById("regCard");
-  var btn = document.getElementById("downloadCardBtn");
-  if (!card) return;
+/* ---- Download Card — drawn entirely with Canvas 2D primitives.
+   No DOM screenshot, no html2canvas, no CSS interpretation at draw time.
+   Every coordinate below is fixed, so output is identical on every
+   device and browser, every time. ---- */
 
-  if (typeof html2canvas === "undefined") {
-    alert("Download isn't ready yet — please screenshot the card instead.");
-    return;
-  }
+var CARD_W = 1010, CARD_H = 637;
+
+function roundRectPath(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+function waitForFonts() {
+  var specs = ['800 32px Sora', '700 26px Sora', '700 22px Sora', '600 13px Sora'];
+  var loads = specs.map(function(spec) {
+    try { return document.fonts.load(spec); } catch (e) { return Promise.resolve(); }
+  });
+  var allLoaded = Promise.all(loads).then(function() { return document.fonts.ready; });
+  var timeout = new Promise(function(resolve) { setTimeout(resolve, 2500); });
+  return Promise.race([allLoaded, timeout]);
+}
+
+function loadImageSafe(src) {
+  return new Promise(function(resolve) {
+    if (!src) { resolve(null); return; }
+    var img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = function() { resolve(img); };
+    img.onerror = function() { resolve(null); };
+    img.src = src;
+  });
+}
+
+function drawCardToPng(regNumber, fullName, category, qrSrc) {
+  return Promise.all([waitForFonts(), loadImageSafe(qrSrc)]).then(function(results) {
+    var qrImg = results[1];
+
+    var scale = 3; // crisp output regardless of screen DPI
+    var canvas = document.createElement("canvas");
+    canvas.width = CARD_W * scale;
+    canvas.height = CARD_H * scale;
+    var ctx = canvas.getContext("2d");
+    ctx.scale(scale, scale);
+
+    // ---- card boundary (rounded, everything else clipped inside) ----
+    roundRectPath(ctx, 0, 0, CARD_W, CARD_H, 28);
+    ctx.save();
+    ctx.clip();
+
+    // ---- base gradient ----
+    var bg = ctx.createLinearGradient(0, 0, CARD_W * 0.55, CARD_H);
+    bg.addColorStop(0, "#241A0D");
+    bg.addColorStop(0.42, "#171009");
+    bg.addColorStop(0.78, "#0E0A06");
+    bg.addColorStop(1, "#0B0806");
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, CARD_W, CARD_H);
+
+    // ---- radial glow, top-left ----
+    var glow = ctx.createRadialGradient(CARD_W * 0.08, -CARD_H * 0.1, 0, CARD_W * 0.08, -CARD_H * 0.1, CARD_W * 0.85);
+    glow.addColorStop(0, "rgba(232,187,110,0.28)");
+    glow.addColorStop(1, "rgba(232,187,110,0)");
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, CARD_W, CARD_H);
+
+    // ---- diagonal hairline stripes ----
+    ctx.save();
+    ctx.strokeStyle = "rgba(240,210,138,0.06)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    var diag = Math.sqrt(CARD_W * CARD_W + CARD_H * CARD_H);
+    for (var xOff = -diag; xOff < diag; xOff += 7) {
+      ctx.moveTo(xOff, -diag);
+      ctx.lineTo(xOff + diag * Math.tan(25 * Math.PI / 180), diag);
+    }
+    ctx.stroke();
+    ctx.restore();
+
+    // ---- soft top-left sheen ----
+    var sheen = ctx.createLinearGradient(0, 0, CARD_W * 0.4, CARD_H * 0.3);
+    sheen.addColorStop(0, "rgba(255,255,255,0.10)");
+    sheen.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.fillStyle = sheen;
+    ctx.fillRect(0, 0, CARD_W, CARD_H);
+
+    // ---- content padding box ----
+    var padX = 38, padTop = 34;
+
+    // ---- top row: brand (left) / issuer (right) ----
+    ctx.textBaseline = "alphabetic";
+    ctx.font = "800 22px Sora, sans-serif";
+    ctx.fillStyle = "#F5E3BC";
+    ctx.textAlign = "left";
+    ctx.font = "20px sans-serif";
+    ctx.fillText("🔥", padX, padTop + 20);
+    ctx.font = "800 22px Sora, sans-serif";
+    ctx.fillText("NYC 2026", padX + 30, padTop + 20);
+
+    ctx.textAlign = "right";
+    ctx.font = "800 22px Sora, sans-serif";
+    ctx.fillStyle = "#F5E3BC";
+    ctx.fillText("LCDAI", CARD_W - padX, padTop + 20);
+    ctx.font = "600 11px Sora, sans-serif";
+    ctx.fillStyle = "rgba(255,248,234,0.5)";
+    ctx.fillText("LIVING CHRIST DISCIPLES", CARD_W - padX, padTop + 40);
+    ctx.fillText("ASSEMBLY INT'L", CARD_W - padX, padTop + 54);
+
+    // ---- chip + NFC icon ----
+    var chipY = padTop + 62;
+    var chip = ctx.createLinearGradient(padX, chipY, padX + 54, chipY + 40);
+    chip.addColorStop(0, "#F5E3BC");
+    chip.addColorStop(0.3, "#E4C077");
+    chip.addColorStop(0.6, "#C99A44");
+    chip.addColorStop(1, "#9C7327");
+    roundRectPath(ctx, padX, chipY, 54, 40, 8);
+    ctx.fillStyle = chip;
+    ctx.fill();
+    ctx.strokeStyle = "rgba(0,0,0,0.3)";
+    ctx.lineWidth = 1;
+    roundRectPath(ctx, padX + 8, chipY + 6, 38, 28, 3);
+    ctx.stroke();
+
+    ctx.strokeStyle = "rgba(245,227,188,0.55)";
+    ctx.lineWidth = 1.6;
+    ctx.lineCap = "round";
+    var nfcX = padX + 78, nfcY = chipY + 20;
+    [7, 11, 15].forEach(function(r, i) {
+      ctx.beginPath();
+      ctx.arc(nfcX, nfcY, r, -0.55, 0.55);
+      ctx.stroke();
+    });
+
+    // ---- reg number + name ----
+    var noY = chipY + 40 + 56;
+    ctx.textAlign = "left";
+    ctx.font = "700 32px Sora, sans-serif";
+    ctx.fillStyle = "#F0D28A";
+    ctx.fillText(regNumber, padX, noY);
+
+    ctx.font = "700 26px Sora, sans-serif";
+    ctx.fillStyle = "#FFF8EA";
+    ctx.fillText((fullName || "").toUpperCase(), padX, noY + 46);
+
+    // ---- bottom row: category pill (left) / QR (right) ----
+    var bottomY = CARD_H - 30;
+    ctx.font = "700 13px Sora, sans-serif";
+    var catText = (category || "").toUpperCase();
+    var catPadX = 18;
+    var catW = ctx.measureText(catText).width + catPadX * 2;
+    var catH = 34;
+    var catY = bottomY - catH;
+    roundRectPath(ctx, padX, catY, catW, catH, catH / 2);
+    ctx.fillStyle = "rgba(245,227,188,0.08)";
+    ctx.fill();
+    ctx.strokeStyle = "rgba(245,227,188,0.35)";
+    ctx.lineWidth = 1;
+    roundRectPath(ctx, padX, catY, catW, catH, catH / 2);
+    ctx.stroke();
+    ctx.fillStyle = "#F5E3BC";
+    ctx.textAlign = "left";
+    ctx.fillText(catText, padX + catPadX, catY + catH / 2 + 4);
+
+    if (qrImg) {
+      var qrSize = 52, qrPad = 4;
+      var qrX = CARD_W - padX - qrSize - qrPad * 2;
+      var qrY = bottomY - qrSize - qrPad * 2;
+      roundRectPath(ctx, qrX, qrY, qrSize + qrPad * 2, qrSize + qrPad * 2, 6);
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fill();
+      ctx.drawImage(qrImg, qrX + qrPad, qrY + qrPad, qrSize, qrSize);
+    }
+
+    ctx.restore(); // end clip
+
+    return canvas.toDataURL("image/png", 1.0);
+  });
+}
+
+function downloadCard() {
+  var btn = document.getElementById("downloadCardBtn");
+  var regNoEl = document.getElementById("cardRegNumber");
+  var nameEl = document.getElementById("cardName");
+  var categoryEl = document.getElementById("cardCategory");
+  var qrEl = document.getElementById("cardQr");
+  if (!regNoEl) return;
 
   if (btn) { btn.disabled = true; btn.textContent = "Preparing…"; }
 
-  var renderScale = Math.max(4, (window.devicePixelRatio || 1) * 3);
+  var regNumber = (regNoEl.textContent || "").trim();
+  var fullName = (nameEl ? nameEl.textContent : "") || "";
+  var category = (categoryEl ? categoryEl.textContent : "") || "";
+  var qrSrc = qrEl ? qrEl.src : "";
 
-  html2canvas(card, {
-    useCORS: true,
-    backgroundColor: null,
-    scale: renderScale,
-    foreignObjectRendering: true
-  }).then(function(canvas) {
-    var link = document.createElement("a");
-    var regNo = document.getElementById("cardRegNumber");
-    link.download = (regNo ? regNo.textContent.replace(/\s|·/g, "") : "nyc2026-card") + ".png";
-    link.href = canvas.toDataURL("image/png", 1.0);
-    link.click();
-  }).catch(function(err) {
-    console.error("Card download failed:", err);
-    alert("Couldn't generate the download — please screenshot the card instead.");
-  }).finally(function() {
-    if (btn) { btn.disabled = false; btn.textContent = "Download card"; }
-  });
-  }
-  
+  drawCardToPng(regNumber, fullName, category, qrSrc)
+    .then(function(dataUrl) {
+      var link = document.createElement("a");
+      link.download = (regNumber.replace(/\s|·/g, "") || "nyc2026-card") + ".png";
+      link.href = dataUrl;
+      link.click();
+    })
+    .catch(function(err) {
+      console.error("Card download failed:", err);
+      alert("Couldn't generate the download — please screenshot the card instead.");
+    })
+    .finally(function() {
+      if (btn) { btn.disabled = false; btn.textContent = "Download card"; }
+    });
+}
 
 function copyAcct() {
   var acctNum = document.getElementById("acctNum");
@@ -671,7 +811,5 @@ showStep(0);
 
 <!-- External Firebase script — deferred so it NEVER blocks the page above -->
 <script src="script.js" defer></script>
-<!-- html2canvas — only used for the optional "Download card" button, deferred -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
 </body>
 </html>
