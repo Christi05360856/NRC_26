@@ -147,13 +147,13 @@
       </div>
 
       <div class="field">
-        <label for="church">Church / Assembly</label>
-        <input type="text" id="church" name="church" required>
+        <label for="church">Church / Assembly <span class="opt-hint">(leave blank if you're an invited guest)</span></label>
+        <input type="text" id="church" name="church">
       </div>
 
       <div class="field">
-        <label for="branch">Branch / Location</label>
-        <input type="text" id="branch" name="branch" required>
+        <label for="branch">Branch / Location <span class="opt-hint">(leave blank if you're an invited guest)</span></label>
+        <input type="text" id="branch" name="branch">
       </div>
 
       <div class="field">
@@ -209,6 +209,12 @@
         <label class="opt"><input type="radio" name="fee" value="₦20,000"><span class="opt-inner"><span class="opt-label">₦20,000</span><span class="dot"></span></span></label>
         <label class="opt"><input type="radio" name="fee" value="₦50,000"><span class="opt-inner"><span class="opt-label">₦50,000</span><span class="dot"></span></span></label>
         <label class="opt"><input type="radio" name="fee" value="Others"><span class="opt-inner"><span class="opt-label">Others</span><span class="dot"></span></span></label>
+      </div>
+
+      <div class="fee-divider"><span>or</span></div>
+
+      <div class="opt-col">
+        <label class="opt opt-invitee"><input type="radio" name="fee" value="Invitee"><span class="opt-inner"><span class="opt-label">I'm an invited guest — no fee</span><span class="dot"></span></span></label>
       </div>
 
       <div class="field fee-other" id="feeOtherBlock">
