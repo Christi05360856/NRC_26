@@ -13,6 +13,13 @@ const firebaseConfig = {
 };
 const REGISTRATIONS_COLLECTION = "registrations";
 
+function withTimeout(promise, ms) {
+  return new Promise((resolve, reject) => {
+    const t = setTimeout(() => reject(Object.assign(new Error("timeout"), { code: "app/timeout" })), ms);
+    promise.then((v) => { clearTimeout(t); resolve(v); }, (e) => { clearTimeout(t); reject(e); });
+  });
+}
+
 let _db = null;
 let _auth = null;
 let _firestoreFns = null;
@@ -83,7 +90,7 @@ window._nycSubmit = async function() {
   };
 
   try {
-    const { collection, doc, setDoc, serverTimestamp, query, where, getDocs } = await loadFirebase();
+    const { collection, doc, setDoc, serverTimestamp, query, where, getDocs } = await withTimeout(loadFirebase(), 20000);
 
     // Block only exact same person (same phone + same name) registering twice.
     // A different name on the same phone (e.g. registering a friend) is allowed.
@@ -92,7 +99,7 @@ window._nycSubmit = async function() {
       where("phoneNorm", "==", phoneNorm),
       where("nameNorm", "==", nameNorm)
     );
-    const dupSnap = await getDocs(dupQuery);
+    const dupSnap = await withTimeout(getDocs(dupQuery), 20000);
     if (!dupSnap.empty) {
       if (statusMsg) {
         statusMsg.textContent = "It looks like this name and number are already registered. Registering a friend? Use their name.";
@@ -112,7 +119,7 @@ window._nycSubmit = async function() {
     payload.checkedInAt = null;
     payload.checkedInBy = null;
     payload.submittedAt = serverTimestamp();
-    await setDoc(docRef, payload);
+    await withTimeout(setDoc(docRef, payload), 20000);
 
     const cardRegNumber = document.getElementById("cardRegNumber");
     const cardName = document.getElementById("cardName");
@@ -129,8 +136,18 @@ window._nycSubmit = async function() {
     if (successOverlay) successOverlay.classList.add("show");
   } catch (err) {
     console.error("Registration failed:", err);
+    let msg;
+    if (err && err.code === "app/timeout") {
+      msg = "This is taking longer than usual — your connection may be weak. Your details are still here, just tap Complete Registration again.";
+    } else if (typeof navigator !== "undefined" && navigator.onLine === false) {
+      msg = "You appear to be offline. Your details are still here — reconnect and tap Complete Registration again.";
+    } else if (err && err.code === "permission-denied") {
+      msg = "Couldn't submit right now — please try again in a moment. (ref: permission-denied)";
+    } else {
+      msg = "Couldn't submit — please try again." + (err && err.code ? " (ref: " + err.code + ")" : "");
+    }
     if (statusMsg) {
-      statusMsg.textContent = "Couldn't submit — your connection may be too slow right now. Please try again.";
+      statusMsg.textContent = msg;
       statusMsg.style.color = "#C24444";
     }
   } finally {
@@ -142,3 +159,10 @@ window._nycSubmit = async function() {
 };
 
 console.log("[NYC2026] External script loaded — Firebase submit handler ready.");
+
+// Start fetching Firebase in the background the moment this script runs,
+// instead of waiting for submit. On a weak connection, the worst possible
+// time to first load the SDK is the moment someone hits "Complete
+// Registration" — this way it's usually already cached by then, since
+// filling the form takes ~2 minutes.
+loadFirebase().catch(function() { /* real errors resurface at submit time */ });
