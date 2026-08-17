@@ -11,6 +11,11 @@
 </head>
 <body>
 
+<div class="resume-banner hidden" id="resumeBanner">
+  <span>Welcome back — we restored your unfinished registration.</span>
+  <button type="button" id="resumeStartFreshBtn">Start Fresh</button>
+</div>
+
 <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
 
 <form id="regForm">
@@ -59,6 +64,38 @@
 
       <button type="button" class="btn-primary btn-full" onclick="goNext()">Begin Registration &rarr;</button>
       <p class="micro-note">Takes about 2 minutes</p>
+
+      <div class="find-card-wrap">
+        <button type="button" class="link-btn" id="findCardToggle">Already registered? Find your card</button>
+
+        <div class="support-card find-card-panel hidden" id="findCardPanel">
+          <div class="find-tabs">
+            <button type="button" class="find-tab active" data-mode="regnumber">Registration Number</button>
+            <button type="button" class="find-tab" data-mode="namephone">Name + Phone</button>
+          </div>
+
+          <div class="find-mode" id="findModeRegNumber">
+            <div class="field">
+              <label for="findRegNumber">Registration number</label>
+              <input type="text" id="findRegNumber" placeholder="e.g. NYC26-4F9B2C" autocapitalize="characters">
+            </div>
+          </div>
+
+          <div class="find-mode hidden" id="findModeNamePhone">
+            <div class="field">
+              <label for="findFullName">Full name (as registered)</label>
+              <input type="text" id="findFullName" placeholder="e.g. John Adewale">
+            </div>
+            <div class="field">
+              <label for="findPhone">Phone / WhatsApp number</label>
+              <input type="tel" id="findPhone" placeholder="0803 123 4567">
+            </div>
+          </div>
+
+          <p class="error" id="findCardError"></p>
+          <button type="button" class="btn-primary btn-full" id="findCardBtn">Find my card</button>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -321,11 +358,150 @@ function validateStep(index) {
 function goNext() {
   if (!validateStep(currentIndex)) return;
   if (currentIndex < steps.length - 1) showStep(currentIndex + 1);
+  saveDraft();
 }
 
 function goBack() {
   if (currentIndex > 0) showStep(currentIndex - 1);
+  saveDraft();
 }
+
+/* ---- Find Your Card panel ---- */
+var findCardToggle = document.getElementById("findCardToggle");
+var findCardPanel = document.getElementById("findCardPanel");
+var findTabs = document.querySelectorAll(".find-tab");
+var findModeRegNumber = document.getElementById("findModeRegNumber");
+var findModeNamePhone = document.getElementById("findModeNamePhone");
+var findCardBtn = document.getElementById("findCardBtn");
+var currentFindMode = "regnumber";
+
+if (findCardToggle) {
+  findCardToggle.addEventListener("click", function() {
+    findCardPanel.classList.toggle("hidden");
+  });
+}
+
+findTabs.forEach(function(tab) {
+  tab.addEventListener("click", function() {
+    findTabs.forEach(function(t) { t.classList.remove("active"); });
+    tab.classList.add("active");
+    currentFindMode = tab.getAttribute("data-mode");
+    if (findModeRegNumber) findModeRegNumber.classList.toggle("hidden", currentFindMode !== "regnumber");
+    if (findModeNamePhone) findModeNamePhone.classList.toggle("hidden", currentFindMode !== "namephone");
+    var errEl = document.getElementById("findCardError");
+    if (errEl) { errEl.textContent = ""; errEl.classList.remove("show"); }
+  });
+});
+
+if (findCardBtn) {
+  findCardBtn.addEventListener("click", function() {
+    if (typeof window._nycFindCard !== "function") {
+      var errEl = document.getElementById("findCardError");
+      if (errEl) { errEl.textContent = "Still loading — try again in a second."; errEl.classList.add("show"); }
+      return;
+    }
+    if (currentFindMode === "regnumber") {
+      window._nycFindCard("regnumber", { regNumber: document.getElementById("findRegNumber").value });
+    } else {
+      window._nycFindCard("namephone", {
+        fullName: document.getElementById("findFullName").value,
+        phone: document.getElementById("findPhone").value
+      });
+    }
+  });
+}
+
+/* ---- In-progress draft persistence (localStorage) ----
+   Saves form field values + current step so a refresh, an accidental
+   tab close, or leaving mid-registration doesn't lose the user's
+   progress. Runs entirely on-device; nothing here touches Firebase. */
+var DRAFT_KEY = "nyc2026_draft_v1";
+var DRAFT_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000; // discard drafts older than 30 days
+var resumeBanner = document.getElementById("resumeBanner");
+var resumeStartFreshBtn = document.getElementById("resumeStartFreshBtn");
+
+function collectDraft() {
+  var fields = {};
+  form.querySelectorAll("input").forEach(function(el) {
+    if (el.type === "radio") {
+      if (el.checked) fields[el.name] = el.value;
+    } else {
+      fields[el.name] = el.value;
+    }
+  });
+  return { fields: fields, step: currentIndex, savedAt: Date.now() };
+}
+
+function saveDraft() {
+  try { localStorage.setItem(DRAFT_KEY, JSON.stringify(collectDraft())); }
+  catch (e) { /* storage full/blocked (e.g. private browsing) — draft just won't persist */ }
+}
+
+function clearDraft() {
+  try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
+}
+window._nycClearDraft = clearDraft;
+
+function loadDraft() {
+  var raw;
+  try { raw = localStorage.getItem(DRAFT_KEY); } catch (e) { return null; }
+  if (!raw) return null;
+  try {
+    var parsed = JSON.parse(raw);
+    if (!parsed || !parsed.fields) return null;
+    if (Date.now() - (parsed.savedAt || 0) > DRAFT_MAX_AGE_MS) { clearDraft(); return null; }
+    return parsed;
+  } catch (e) { return null; }
+}
+
+function applyDraft(draft) {
+  var fields = draft.fields || {};
+  Object.keys(fields).forEach(function(name) {
+    var value = fields[name];
+    var matches = form.querySelectorAll('input[name="' + name + '"]');
+    if (!matches.length) return;
+    if (matches[0].type === "radio") {
+      matches.forEach(function(r) {
+        r.checked = (r.value === value);
+        if (r.checked) r.dispatchEvent(new Event("change"));
+      });
+    } else {
+      matches[0].value = value;
+    }
+  });
+  showStep(Math.min(draft.step || 0, steps.length - 1));
+}
+
+function hasMeaningfulDraft(draft) {
+  var f = draft.fields || {};
+  return !!(f.fullName || f.phone || draft.step > 0);
+}
+
+// Restore any saved draft on load
+var existingDraft = loadDraft();
+if (existingDraft && hasMeaningfulDraft(existingDraft)) {
+  applyDraft(existingDraft);
+  if (resumeBanner) resumeBanner.classList.remove("hidden");
+}
+
+if (resumeStartFreshBtn) {
+  resumeStartFreshBtn.addEventListener("click", function() {
+    clearDraft();
+    form.reset();
+    if (feeOtherBlock) feeOtherBlock.classList.remove("show");
+    if (volunteerBlock) volunteerBlock.classList.remove("show");
+    if (resumeBanner) resumeBanner.classList.add("hidden");
+    showStep(0);
+  });
+}
+
+// Save on every field change, and whenever the step changes
+var draftSaveTimer = null;
+form.addEventListener("input", function() {
+  clearTimeout(draftSaveTimer);
+  draftSaveTimer = setTimeout(saveDraft, 250);
+});
+form.addEventListener("change", saveDraft);
 
 function downloadCard() {
   var card = document.getElementById("regCard");
@@ -373,14 +549,28 @@ function copyAcct() {
 
 function closeSuccess() {
   if (successOverlay) successOverlay.classList.remove("show");
-  form.reset();
-  if (feeOtherBlock) feeOtherBlock.classList.remove("show");
-  if (volunteerBlock) volunteerBlock.classList.remove("show");
   var cardQr = document.getElementById("cardQr");
   if (cardQr) cardQr.src = "";
   var downloadBtn = document.getElementById("downloadCardBtn");
   if (downloadBtn) { downloadBtn.disabled = false; downloadBtn.textContent = "Download card"; }
+
+  // The card overlay is reused for two different situations: a brand-new
+  // successful submission, and someone just looking up an old card via
+  // "Find your card". Only the first should reset the form/step/draft —
+  // otherwise closing a looked-up card would wipe someone's unrelated
+  // in-progress registration.
+  if (window._nycCardOverlayReason === "find") {
+    window._nycCardOverlayReason = null;
+    return;
+  }
+
+  form.reset();
+  if (feeOtherBlock) feeOtherBlock.classList.remove("show");
+  if (volunteerBlock) volunteerBlock.classList.remove("show");
+  clearDraft();
+  if (resumeBanner) resumeBanner.classList.add("hidden");
   showStep(0);
+  window._nycCardOverlayReason = null;
 }
 
 document.querySelectorAll('input[name="fee"]').forEach(function(radio) {
