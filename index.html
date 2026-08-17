@@ -252,21 +252,24 @@
     <p class="card-sub">Your registration for NYC 2026 is confirmed. Show this card at check-in.</p>
 
     <div class="reg-card" id="regCard">
+      <div class="reg-card-chip"></div>
       <div class="reg-card-top">
         <span class="reg-card-event">NYC 2026</span>
-        <span class="reg-card-no" id="cardRegNumber">—</span>
+        <span class="reg-card-issuer">Living Christ Disciples Assembly Int'l</span>
       </div>
+      <div class="reg-card-no" id="cardRegNumber">—</div>
       <div class="reg-card-name" id="cardName">—</div>
       <div class="reg-card-row">
         <span class="reg-card-k">Category</span>
         <span class="reg-card-v" id="cardCategory">—</span>
       </div>
       <div class="reg-card-qr">
-        <img id="cardQr" src="" alt="Registration QR code" width="150" height="150">
+        <img id="cardQr" src="" alt="Registration QR code" width="120" height="120" crossorigin="anonymous">
       </div>
     </div>
 
     <p class="micro-note center">Screenshot this card — you'll need it at the gate.</p>
+    <button type="button" class="btn-ghost btn-full" id="downloadCardBtn" onclick="downloadCard()">Download card</button>
     <button type="button" class="btn-primary btn-full" onclick="closeSuccess()">Done</button>
   </div>
 </div>
@@ -315,6 +318,29 @@ function goBack() {
   if (currentIndex > 0) showStep(currentIndex - 1);
 }
 
+function downloadCard() {
+  var card = document.getElementById("regCard");
+  var btn = document.getElementById("downloadCardBtn");
+  if (!card) return;
+  if (typeof html2canvas === "undefined") {
+    alert("Download isn't ready yet — please screenshot the card instead.");
+    return;
+  }
+  if (btn) { btn.disabled = true; btn.textContent = "Preparing…"; }
+  html2canvas(card, { useCORS: true, backgroundColor: null, scale: 2 }).then(function(canvas) {
+    var link = document.createElement("a");
+    var regNo = document.getElementById("cardRegNumber");
+    link.download = (regNo ? regNo.textContent : "nyc2026-card") + ".png";
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+  }).catch(function(err) {
+    console.error("Card download failed:", err);
+    alert("Couldn't generate the download — please screenshot the card instead.");
+  }).finally(function() {
+    if (btn) { btn.disabled = false; btn.textContent = "Download card"; }
+  });
+}
+
 function copyAcct() {
   var acctNum = document.getElementById("acctNum");
   if (!acctNum) return;
@@ -343,6 +369,8 @@ function closeSuccess() {
   if (volunteerBlock) volunteerBlock.classList.remove("show");
   var cardQr = document.getElementById("cardQr");
   if (cardQr) cardQr.src = "";
+  var downloadBtn = document.getElementById("downloadCardBtn");
+  if (downloadBtn) { downloadBtn.disabled = false; downloadBtn.textContent = "Download card"; }
   showStep(0);
 }
 
@@ -378,5 +406,7 @@ showStep(0);
 
 <!-- External Firebase script — deferred so it NEVER blocks the page above -->
 <script src="script.js" defer></script>
+<!-- html2canvas — only used for the optional "Download card" button, deferred -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
 </body>
         </html>
