@@ -298,63 +298,90 @@ input[type=date]{color-scheme:light;}
   max-width:360px;
   box-shadow:var(--shadow-lg);
 }
+.success-card #downloadCardBtn{margin-bottom:12px;}
 .flame-icon{font-size:48px; margin-bottom:12px;}
 .success-card h2{color:var(--text); margin:0 0 10px; font-size:24px;}
 .success-card p{font-size:14.5px; color:var(--muted); margin:0 0 24px; line-height:1.6;}
 .success-card p.card-sub{margin:0 0 20px;}
 
 .reg-card{
-  background:linear-gradient(160deg, #FFFDF8, var(--bg-soft));
-  border:1.5px solid var(--line);
-  border-radius:var(--radius);
-  padding:20px;
+  position:relative;
+  aspect-ratio:1.586/1;
+  min-height:300px;
+  border-radius:18px;
+  padding:20px 22px;
   margin-bottom:18px;
   text-align:left;
-  box-shadow:var(--shadow);
+  overflow:hidden;
+  color:#FFF8EA;
+  box-shadow:var(--shadow-lg);
+  background-image:
+    linear-gradient(160deg, rgba(20,14,4,0.82), rgba(20,14,4,0.60) 45%, rgba(20,14,4,0.88)),
+    url('flyer.jpg');
+  background-size:cover;
+  background-position:center 20%;
+  display:flex;
+  flex-direction:column;
+}
+.reg-card-chip{
+  width:38px; height:28px;
+  border-radius:6px;
+  background:linear-gradient(135deg, #F0D28A, #C8951A 60%, #8A6209);
+  margin-bottom:14px;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,0.25);
 }
 .reg-card-top{
-  display:flex; justify-content:space-between; align-items:center;
-  margin-bottom:14px;
+  display:flex; justify-content:space-between; align-items:flex-start;
+  margin-bottom:auto;
+  gap:10px;
 }
 .reg-card-event{
-  font-size:11px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase;
-  color:var(--amber);
+  font-family:'Sora',sans-serif;
+  font-size:13px; font-weight:800; letter-spacing:0.06em;
+  color:#FFF8EA;
+  text-shadow:0 1px 4px rgba(0,0,0,0.4);
+}
+.reg-card-issuer{
+  font-size:9.5px; font-weight:600; letter-spacing:0.03em;
+  color:rgba(255,248,234,0.75);
+  text-align:right;
+  max-width:150px;
+  line-height:1.3;
 }
 .reg-card-no{
   font-family:'Sora',sans-serif;
-  font-size:13px; font-weight:700;
-  color:var(--gold);
-  background:rgba(200,149,26,0.10);
-  padding:4px 10px;
-  border-radius:8px;
-  letter-spacing:0.02em;
+  font-size:17px; font-weight:700;
+  letter-spacing:0.08em;
+  color:#F0D28A;
+  text-shadow:0 1px 4px rgba(0,0,0,0.4);
+  margin:16px 0 10px;
 }
 .reg-card-name{
   font-family:'Sora',sans-serif;
-  font-size:19px; font-weight:700;
-  color:var(--text);
-  margin-bottom:14px;
+  font-size:16px; font-weight:700;
+  color:#FFF8EA;
+  text-transform:uppercase;
+  letter-spacing:0.03em;
+  text-shadow:0 1px 4px rgba(0,0,0,0.4);
   word-break:break-word;
 }
 .reg-card-row{
   display:flex; justify-content:space-between; align-items:center;
-  padding:10px 0;
-  border-top:1px solid var(--line);
-  font-size:13.5px;
+  margin-top:8px;
+  font-size:11.5px;
 }
-.reg-card-k{color:var(--muted); font-weight:600;}
-.reg-card-v{color:var(--text); font-weight:700;}
+.reg-card-k{color:rgba(255,248,234,0.65); font-weight:600; text-transform:uppercase; letter-spacing:0.05em;}
+.reg-card-v{color:#FFF8EA; font-weight:700;}
 .reg-card-qr{
-  display:flex; justify-content:center;
-  margin-top:16px; padding-top:16px;
-  border-top:1px dashed var(--line);
+  position:absolute;
+  right:16px; bottom:16px;
 }
 .reg-card-qr img{
-  width:150px; height:150px;
-  border-radius:10px;
+  width:64px; height:64px;
+  border-radius:8px;
   background:#fff;
-  padding:8px;
-  border:1px solid var(--line);
+  padding:5px;
+  display:block;
 }
 
 /* ================= RESPONSIVE ================= */
