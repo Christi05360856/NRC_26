@@ -252,19 +252,28 @@
     <p class="card-sub">Your registration for NYC 2026 is confirmed. Show this card at check-in.</p>
 
     <div class="reg-card" id="regCard">
-      <div class="reg-card-chip"></div>
-      <div class="reg-card-top">
-        <span class="reg-card-event">NYC 2026</span>
-        <span class="reg-card-issuer">Living Christ Disciples Assembly Int'l</span>
-      </div>
-      <div class="reg-card-no" id="cardRegNumber">—</div>
-      <div class="reg-card-name" id="cardName">—</div>
-      <div class="reg-card-row">
-        <span class="reg-card-k">Category</span>
-        <span class="reg-card-v" id="cardCategory">—</span>
-      </div>
-      <div class="reg-card-qr">
-        <img id="cardQr" src="" alt="Registration QR code" width="120" height="120" crossorigin="anonymous">
+      <div class="reg-card-texture"></div>
+      <div class="reg-card-sheen"></div>
+      <div class="reg-card-content">
+        <div class="reg-card-top">
+          <div class="reg-card-brand">
+            <svg viewBox="0 0 48 48" fill="none">
+              <path d="M24 4C24 4 14 15 14 26C14 33.7 18.7 40 24 40C29.3 40 34 33.7 34 26C34 15 24 4 24 4Z" fill="#F0D28A"/>
+              <path d="M24 16C24 16 19 22.5 19 28.5C19 33 21.2 36 24 36C26.8 36 29 33 29 28.5C29 22.5 24 16 24 16Z" fill="#9C7327"/>
+            </svg>
+            <span class="reg-card-event">NYC 2026</span>
+          </div>
+          <span class="reg-card-issuer">Living Christ Disciples<br>Assembly Int'l</span>
+        </div>
+        <div class="reg-card-chip"></div>
+        <div class="reg-card-no" id="cardRegNumber">—</div>
+        <div class="reg-card-name" id="cardName">—</div>
+        <div class="reg-card-bottom">
+          <span class="reg-card-category" id="cardCategory">—</span>
+          <div class="reg-card-qr">
+            <img id="cardQr" src="" alt="Registration QR code" width="120" height="120" crossorigin="anonymous">
+          </div>
+        </div>
       </div>
     </div>
 
