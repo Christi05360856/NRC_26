@@ -28,6 +28,41 @@ body{
 h1,h2,.display{font-family:'Sora',sans-serif;}
 button{font-family:inherit;}
 
+/* ================= UTILITY ================= */
+.hidden{display:none !important;}
+.error{color:var(--red); font-size:12.5px; margin:6px 0 0; display:none;}
+.error.show{display:block;}
+
+/* ================= RESUME DRAFT BANNER ================= */
+.resume-banner{
+  position:fixed; top:3px; left:0; right:0; z-index:60;
+  background:#241A0D; color:#F5E3BC;
+  padding:10px 16px;
+  display:flex; align-items:center; justify-content:center;
+  gap:14px; flex-wrap:wrap; text-align:center;
+  font-size:12.5px; font-weight:500;
+}
+.resume-banner button{
+  padding:7px 14px; border-radius:8px; border:1.5px solid rgba(245,227,188,0.4);
+  background:transparent; color:#F5E3BC; font-weight:700; font-size:12px; cursor:pointer;
+}
+
+/* ================= FIND YOUR CARD ================= */
+.find-card-wrap{margin-top:18px; text-align:center;}
+.link-btn{
+  background:none; border:none; padding:0;
+  color:var(--gold); font-weight:600; font-size:13.5px;
+  text-decoration:underline; cursor:pointer; font-family:inherit;
+}
+.find-card-panel{margin-top:16px; text-align:left;}
+.find-tabs{display:flex; gap:8px; margin-bottom:16px;}
+.find-tab{
+  flex:1; padding:10px; border-radius:10px;
+  border:1.5px solid var(--line); background:var(--card);
+  font-size:12px; font-weight:700; color:var(--muted); cursor:pointer;
+}
+.find-tab.active{border-color:var(--gold); color:var(--gold); background:rgba(200,149,26,0.06);}
+
 /* ================= PROGRESS BAR ================= */
 .progress-bar{
   position:fixed; top:0; left:0; right:0; height:3px;
