@@ -292,6 +292,7 @@
       <div class="reg-card-texture"></div>
       <div class="reg-card-sheen"></div>
       <div class="reg-card-content">
+
         <div class="reg-card-top">
           <div class="reg-card-brand">
             <svg viewBox="0 0 48 48" fill="none">
@@ -300,17 +301,32 @@
             </svg>
             <span class="reg-card-event">NYC 2026</span>
           </div>
-          <span class="reg-card-issuer">Living Christ Disciples<br>Assembly Int'l</span>
+          <div class="reg-card-issuer">
+            <span class="reg-card-issuer-acronym">LCDAI</span>
+            <span class="reg-card-issuer-full">Living Christ Disciples Assembly Int'l</span>
+          </div>
         </div>
-        <div class="reg-card-chip"></div>
+
+        <div class="reg-card-chip-row">
+          <div class="reg-card-chip" aria-hidden="true"></div>
+          <svg class="reg-card-nfc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+            <path d="M8.5 8.5a5 5 0 010 7"/>
+            <path d="M11.5 5.5a9 9 0 010 13"/>
+            <path d="M14.5 2.5a13 13 0 010 19"/>
+          </svg>
+        </div>
+
         <div class="reg-card-no" id="cardRegNumber">—</div>
+
         <div class="reg-card-name" id="cardName">—</div>
+
         <div class="reg-card-bottom">
           <span class="reg-card-category" id="cardCategory">—</span>
           <div class="reg-card-qr">
-            <img id="cardQr" src="" alt="Registration QR code" width="120" height="120" crossorigin="anonymous">
+            <img id="cardQr" src="" alt="Registration QR code" width="120" height="120">
           </div>
         </div>
+
       </div>
     </div>
 
@@ -512,11 +528,12 @@ function downloadCard() {
     return;
   }
   if (btn) { btn.disabled = true; btn.textContent = "Preparing…"; }
-  html2canvas(card, { useCORS: true, backgroundColor: null, scale: 2 }).then(function(canvas) {
+  var renderScale = Math.max(4, (window.devicePixelRatio || 1) * 3);
+  html2canvas(card, { useCORS: true, backgroundColor: null, scale: renderScale }).then(function(canvas) {
     var link = document.createElement("a");
     var regNo = document.getElementById("cardRegNumber");
-    link.download = (regNo ? regNo.textContent : "nyc2026-card") + ".png";
-    link.href = canvas.toDataURL("image/png");
+    link.download = (regNo ? regNo.textContent.replace(/\s|·/g, "") : "nyc2026-card") + ".png";
+    link.href = canvas.toDataURL("image/png", 1.0);
     link.click();
   }).catch(function(err) {
     console.error("Card download failed:", err);
@@ -608,4 +625,4 @@ showStep(0);
 <!-- html2canvas — only used for the optional "Download card" button, deferred -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
 </body>
-        </html>
+</html>
