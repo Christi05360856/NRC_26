@@ -56,6 +56,29 @@ function formatRegNumberForCard(regNumber) {
   return (regNumber || "").replace("-", "  ·  ");
 }
 
+// Turns a same-origin-friendly image URL into a base64 data: URL.
+// The QR image comes from a third-party API, and even with crossorigin="anonymous"
+// set on the <img>, some CDNs omit permissive CORS headers on the actual response —
+// which silently taints the canvas and makes html2canvas's toDataURL() throw or
+// export a blank card. Fetching the bytes ourselves and handing back a data: URL
+// sidesteps that entirely: a data: URL never taints a canvas, regardless of what
+// headers the original server sent.
+function toDataUrl(url) {
+  return fetch(url, { mode: "cors" })
+    .then(function(res) {
+      if (!res.ok) throw new Error("qr fetch failed: " + res.status);
+      return res.blob();
+    })
+    .then(function(blob) {
+      return new Promise(function(resolve, reject) {
+        const reader = new FileReader();
+        reader.onload = function() { resolve(reader.result); };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    });
+}
+
 // Fills in and shows the reg card overlay. Used both right after a
 // successful submission and when an existing registrant looks their
 // card up via "Find your card".
@@ -68,9 +91,21 @@ function renderCard(regNumber, fullName, feeCategory) {
   if (cardRegNumber) cardRegNumber.textContent = formatRegNumberForCard(regNumber);
   if (cardName) cardName.textContent = fullName;
   if (cardCategory) cardCategory.textContent = feeCategory;
+
   if (cardQr) {
-    cardQr.src = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" + encodeURIComponent(regNumber);
+    // Request well above display size (58–64px on screen) so the PNG
+    // stays crisp under the 4x+ scale used for screenshots/downloads.
+    const qrApiUrl = "https://api.qrserver.com/v1/create-qr-code/?size=400x400&margin=0&data=" + encodeURIComponent(regNumber);
+    toDataUrl(qrApiUrl)
+      .then(function(dataUrl) { cardQr.src = dataUrl; })
+      .catch(function(err) {
+        console.warn("QR data-URL fetch failed, falling back to direct src:", err);
+        // Best-effort fallback — the QR may not survive html2canvas export in
+        // this case, but the card is still fully readable without it.
+        cardQr.src = qrApiUrl;
+      });
   }
+
   if (successOverlay) successOverlay.classList.add("show");
 }
 
