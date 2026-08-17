@@ -301,6 +301,61 @@ input[type=date]{color-scheme:light;}
 .flame-icon{font-size:48px; margin-bottom:12px;}
 .success-card h2{color:var(--text); margin:0 0 10px; font-size:24px;}
 .success-card p{font-size:14.5px; color:var(--muted); margin:0 0 24px; line-height:1.6;}
+.success-card p.card-sub{margin:0 0 20px;}
+
+.reg-card{
+  background:linear-gradient(160deg, #FFFDF8, var(--bg-soft));
+  border:1.5px solid var(--line);
+  border-radius:var(--radius);
+  padding:20px;
+  margin-bottom:18px;
+  text-align:left;
+  box-shadow:var(--shadow);
+}
+.reg-card-top{
+  display:flex; justify-content:space-between; align-items:center;
+  margin-bottom:14px;
+}
+.reg-card-event{
+  font-size:11px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase;
+  color:var(--amber);
+}
+.reg-card-no{
+  font-family:'Sora',sans-serif;
+  font-size:13px; font-weight:700;
+  color:var(--gold);
+  background:rgba(200,149,26,0.10);
+  padding:4px 10px;
+  border-radius:8px;
+  letter-spacing:0.02em;
+}
+.reg-card-name{
+  font-family:'Sora',sans-serif;
+  font-size:19px; font-weight:700;
+  color:var(--text);
+  margin-bottom:14px;
+  word-break:break-word;
+}
+.reg-card-row{
+  display:flex; justify-content:space-between; align-items:center;
+  padding:10px 0;
+  border-top:1px solid var(--line);
+  font-size:13.5px;
+}
+.reg-card-k{color:var(--muted); font-weight:600;}
+.reg-card-v{color:var(--text); font-weight:700;}
+.reg-card-qr{
+  display:flex; justify-content:center;
+  margin-top:16px; padding-top:16px;
+  border-top:1px dashed var(--line);
+}
+.reg-card-qr img{
+  width:150px; height:150px;
+  border-radius:10px;
+  background:#fff;
+  padding:8px;
+  border:1px solid var(--line);
+}
 
 /* ================= RESPONSIVE ================= */
 @media (min-width:600px){
