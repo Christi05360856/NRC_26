@@ -342,6 +342,17 @@ input[type=date]{color-scheme:light;}
 .success-card p{font-size:14.5px; color:var(--muted); margin:0 0 24px; line-height:1.6;}
 .success-card p.card-sub{margin:0 0 20px;}
 
+/* =====================================================================
+   REGISTRATION CARD
+   Redesigned around three fixes: (1) the acronym "LCDAI" is now the
+   primary issuer mark — the full name only ever appears beneath it at
+   a size small enough that it never fights for space, so nothing gets
+   cropped at any card width; (2) every piece of text on the card uses
+   clamp() tied to the card's own font-size context, so the card can
+   shrink to fit a small phone without any line spilling past the edge;
+   (3) the chip, contact pad and NFC mark read as an actual card face
+   rather than a flat gold rectangle.
+   ===================================================================== */
 .reg-card{
   position:relative;
   width:100%;
@@ -356,6 +367,13 @@ input[type=date]{color-scheme:light;}
     linear-gradient(155deg, #241A0D 0%, #171009 42%, #0E0A06 78%, #0B0806 100%);
   display:flex;
   flex-direction:column;
+  /* base unit every measurement on the card derives from — shrinks the
+     whole face proportionally as the card itself gets narrower. Capped
+     at 13.5px (rather than a full 16px) because the card's own display
+     container is capped at ~360px wide regardless of viewport — past
+     that point a bigger font only ate the vertical breathing room
+     between rows without the card itself getting any taller. */
+  font-size:clamp(9px, 2.6vw, 13.5px);
 }
 /* faint diagonal security-pattern hairlines, like a banknote/card guilloche */
 .reg-card::before{
@@ -375,12 +393,12 @@ input[type=date]{color-scheme:light;}
 .reg-card-texture{
   position:absolute;
   left:0; right:0; bottom:0;
-  height:46%;
+  height:40%;
   background-image:url('card-accent.png');
   background-size:cover;
   background-position:center bottom;
   mix-blend-mode:screen;
-  opacity:0.5;
+  opacity:0.35;
   pointer-events:none;
 }
 /* soft glossy highlight top-left, like light catching laminated plastic */
@@ -392,76 +410,158 @@ input[type=date]{color-scheme:light;}
 .reg-card-content{
   position:relative;
   z-index:1;
-  padding:20px 22px 18px;
+  padding:1.2em 1.35em 1.1em;
   display:flex;
   flex-direction:column;
+  /* space-between does the vertical layout work instead of manual
+     margins: every row keeps its natural height and the GAPS between
+     rows absorb whatever space is left. That makes it mathematically
+     impossible for the footer (QR + amount) to get pushed past the
+     card's bottom edge — which is what was clipping it before.
+     The explicit gap is a floor: rows never sit closer than this even
+     when the card is at its most cramped combination of sizes, so
+     nothing ever looks like it's touching by accident. */
+  justify-content:space-between;
+  gap:0.4em;
   flex:1;
   min-width:0;
+  min-height:0;
 }
+
+/* every direct row is a flex child that's allowed to shrink below its
+   content size if the card is ever squeezed harder than expected,
+   rather than forcing an overflow */
+.reg-card-content > *{flex-shrink:1; min-height:0;}
+
+/* ---- header row: event mark left, issuer mark right ---- */
 .reg-card-top{
   display:flex; justify-content:space-between; align-items:flex-start;
-  gap:10px;
-  margin-bottom:18px;
+  gap:0.6em;
   min-width:0;
 }
-.reg-card-brand{display:flex; align-items:center; gap:8px; min-width:0; flex-shrink:0;}
-.reg-card-brand svg{width:20px; height:20px; flex-shrink:0;}
+.reg-card-brand{display:flex; align-items:center; gap:0.45em; min-width:0; flex-shrink:1;}
+.reg-card-brand svg{width:1.35em; height:1.35em; flex-shrink:0;}
 .reg-card-event{
   font-family:'Sora',sans-serif;
-  font-size:14px; font-weight:800; letter-spacing:0.05em;
+  font-size:1.05em; font-weight:800; letter-spacing:0.04em;
   color:#F5E3BC;
   white-space:nowrap;
 }
+/* issuer mark: acronym is the primary, always-fits element — the full
+   name is a small caption underneath it, never the other way round */
 .reg-card-issuer{
-  font-size:9px; font-weight:600; letter-spacing:0.04em;
-  color:rgba(255,248,234,0.55);
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
   text-align:right;
+  flex-shrink:0;
+  max-width:56%;
   min-width:0;
-  max-width:55%;
-  line-height:1.4;
+}
+.reg-card-issuer-acronym{
+  font-family:'Sora',sans-serif;
+  font-size:1.05em;
+  font-weight:800;
+  letter-spacing:0.14em;
+  color:#F5E3BC;
+  white-space:nowrap;
+}
+.reg-card-issuer-full{
+  font-size:0.5em;
+  font-weight:600;
+  letter-spacing:0.03em;
+  color:rgba(255,248,234,0.5);
   text-transform:uppercase;
+  line-height:1.35;
+  margin-top:0.35em;
+  max-width:100%;
+}
+
+/* ---- chip + contactless mark ---- */
+.reg-card-chip-row{
+  display:flex;
+  align-items:center;
+  gap:0.6em;
 }
 .reg-card-chip{
-  width:40px; height:30px;
-  border-radius:6px;
-  background:
-    linear-gradient(90deg, transparent 0 4px, rgba(0,0,0,0.18) 4px 5px, transparent 5px) 0 6px/100% 6px repeat-y,
-    linear-gradient(135deg, #F5E3BC, #D9AA4B 45%, #9C7327 100%);
-  box-shadow:inset 0 0 0 1px rgba(0,0,0,0.25), 0 1px 2px rgba(0,0,0,0.3);
-  margin-bottom:16px;
+  position:relative;
+  width:2.7em; height:2em;
+  border-radius:0.35em;
+  background:linear-gradient(135deg, #F5E3BC 0%, #E4C077 30%, #C99A44 60%, #9C7327 100%);
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,0.3), 0 1px 3px rgba(0,0,0,0.35);
+  flex-shrink:0;
+  /* ISO/IEC 7816 six-contact pad layout, etched with hairline gaps */
+  background-image:
+    linear-gradient(135deg, #F5E3BC 0%, #E4C077 30%, #C99A44 60%, #9C7327 100%),
+    linear-gradient(90deg, transparent 33%, rgba(0,0,0,0.28) 33%, rgba(0,0,0,0.28) calc(33% + 1px), transparent calc(33% + 1px)),
+    linear-gradient(90deg, transparent 66%, rgba(0,0,0,0.28) 66%, rgba(0,0,0,0.28) calc(66% + 1px), transparent calc(66% + 1px)),
+    linear-gradient(0deg, transparent 48%, rgba(0,0,0,0.28) 48%, rgba(0,0,0,0.28) 52%, transparent 52%);
 }
+.reg-card-chip::after{
+  content:'';
+  position:absolute; inset:14%;
+  border:1px solid rgba(0,0,0,0.18);
+  border-radius:0.15em;
+  pointer-events:none;
+}
+.reg-card-nfc{
+  width:1.3em; height:1.3em;
+  color:rgba(245,227,188,0.55);
+  flex-shrink:0;
+}
+
+/* ---- registration number + cardholder name ----
+   No captions above these — a bank card doesn't label its own number
+   or name either; the formatting (letter-spacing, monospaced feel,
+   position) is what signals what each line is. Dropping the captions
+   also buys back two rows of vertical space, which is what actually
+   fixes the card overflowing on short mobile heights. */
 .reg-card-no{
   font-family:'Sora',sans-serif;
-  font-size:19px; font-weight:700;
-  letter-spacing:0.09em;
+  font-size:1.25em;
+  font-weight:700;
+  letter-spacing:0.06em;
   color:#F0D28A;
   text-shadow:0 1px 2px rgba(0,0,0,0.35);
-  margin:0 0 12px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
 }
 .reg-card-name{
   font-family:'Sora',sans-serif;
-  font-size:17px; font-weight:700;
+  font-size:1.05em;
+  font-weight:700;
   color:#FFF8EA;
   text-transform:uppercase;
-  letter-spacing:0.02em;
-  word-break:break-word;
-  margin-bottom:auto;
+  letter-spacing:0.01em;
+  line-height:1.25;
+  min-width:0;
+  /* Single line, truncated with an ellipsis — exactly like a physical
+     card embosses a name on one line. This keeps the card's height
+     100% predictable regardless of name length, which is what keeps
+     the category pill + QR in the footer from ever being pushed out
+     of frame. A cut-off name is legible; a clipped QR code is not. */
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width:100%;
 }
+
+/* ---- footer: category pill + QR, inset with matching side margins ---- */
 .reg-card-bottom{
   display:flex;
   align-items:flex-end;
   justify-content:space-between;
-  gap:12px;
-  margin-top:18px;
+  gap:0.7em;
   min-width:0;
 }
 .reg-card-category{
   display:inline-block;
-  padding:6px 12px;
-  border-radius:20px;
+  padding:0.5em 0.85em;
+  border-radius:1.2em;
   border:1px solid rgba(245,227,188,0.35);
   background:rgba(245,227,188,0.08);
-  font-size:10.5px;
+  font-size:0.65em;
   font-weight:700;
   letter-spacing:0.04em;
   color:#F5E3BC;
@@ -474,14 +574,23 @@ input[type=date]{color-scheme:light;}
 }
 .reg-card-qr{
   flex-shrink:0;
+  line-height:0;
 }
 .reg-card-qr img{
-  width:58px; height:58px;
-  border-radius:8px;
+  width:3.1em; height:3.1em;
+  border-radius:0.4em;
   background:#fff;
-  padding:5px;
+  padding:0.3em;
   display:block;
   box-shadow:0 4px 14px -4px rgba(0,0,0,0.5);
+}
+
+/* Keep the card comfortably inside the success panel on narrow phones —
+   the overlay padding and card padding both shrink together so the card
+   itself never has to shrink its own font-size clamp to compensate. */
+@media (max-width:380px){
+  .success-overlay{padding:16px;}
+  .success-card{padding:28px 20px;}
 }
 
 /* ================= RESPONSIVE ================= */
