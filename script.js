@@ -14,6 +14,7 @@ const firebaseConfig = {
 const REGISTRATIONS_COLLECTION = "registrations";
 
 let _db = null;
+let _auth = null;
 let _firestoreFns = null;
 let _firebaseLoading = null;
 
@@ -21,12 +22,21 @@ function loadFirebase() {
   if (_firebaseLoading) return _firebaseLoading;
   _firebaseLoading = (async () => {
     const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js");
-    const { getFirestore, collection, addDoc, serverTimestamp, query, where, getDocs } = await import(
+    const { getFirestore, collection, doc, setDoc, serverTimestamp, query, where, getDocs } = await import(
       "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js"
+    );
+    const { getAuth, signInAnonymously } = await import(
+      "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js"
     );
     const app = initializeApp(firebaseConfig);
     _db = getFirestore(app);
-    _firestoreFns = { collection, addDoc, serverTimestamp, query, where, getDocs };
+    _auth = getAuth(app);
+    // Anonymous sign-in — invisible to the registrant, but satisfies the
+    // security rule that requires request.auth != null for the duplicate check.
+    if (!_auth.currentUser) {
+      await signInAnonymously(_auth);
+    }
+    _firestoreFns = { collection, doc, setDoc, serverTimestamp, query, where, getDocs };
     return _firestoreFns;
   })();
   return _firebaseLoading;
@@ -73,7 +83,7 @@ window._nycSubmit = async function() {
   };
 
   try {
-    const { collection, addDoc, serverTimestamp, query, where, getDocs } = await loadFirebase();
+    const { collection, doc, setDoc, serverTimestamp, query, where, getDocs } = await loadFirebase();
 
     // Block only exact same person (same phone + same name) registering twice.
     // A different name on the same phone (e.g. registering a friend) is allowed.
@@ -95,10 +105,15 @@ window._nycSubmit = async function() {
       return;
     }
 
-    payload.submittedAt = serverTimestamp();
-    const docRef = await addDoc(collection(_db, REGISTRATIONS_COLLECTION), payload);
-
+    const docRef = doc(collection(_db, REGISTRATIONS_COLLECTION));
     const regNumber = "NYC26-" + docRef.id.slice(0, 6).toUpperCase();
+    payload.regNumber = regNumber;
+    payload.checkedIn = false;
+    payload.checkedInAt = null;
+    payload.checkedInBy = null;
+    payload.submittedAt = serverTimestamp();
+    await setDoc(docRef, payload);
+
     const cardRegNumber = document.getElementById("cardRegNumber");
     const cardName = document.getElementById("cardName");
     const cardCategory = document.getElementById("cardCategory");
@@ -107,7 +122,7 @@ window._nycSubmit = async function() {
     if (cardName) cardName.textContent = fullName;
     if (cardCategory) cardCategory.textContent = feeCategory;
     if (cardQr) {
-      const qrData = encodeURIComponent(regNumber + " | " + fullName);
+      const qrData = encodeURIComponent(regNumber);
       cardQr.src = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" + qrData;
     }
 
