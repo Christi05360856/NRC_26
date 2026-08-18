@@ -559,6 +559,22 @@ function loadImageSafe(src) {
   });
 }
 
+function drawFlameIcon(ctx, x, y, size) {
+  // Same two-tone shape as the brand's flame mark elsewhere — gold, not a
+  // literal emoji — reproduced here as vector paths so it always matches.
+  var s = size / 48;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(s, s);
+  var outer = new Path2D("M24 4C24 4 14 15 14 26C14 33.7 18.7 40 24 40C29.3 40 34 33.7 34 26C34 15 24 4 24 4Z");
+  var inner = new Path2D("M24 16C24 16 19 22.5 19 28.5C19 33 21.2 36 24 36C26.8 36 29 33 29 28.5C29 22.5 24 16 24 16Z");
+  ctx.fillStyle = "#F0D28A";
+  ctx.fill(outer);
+  ctx.fillStyle = "#9C7327";
+  ctx.fill(inner);
+  ctx.restore();
+}
+
 function drawCardToPng(regNumber, fullName, category, qrSrc) {
   return Promise.all([waitForFonts(), loadImageSafe(qrSrc)]).then(function(results) {
     var qrImg = results[1];
@@ -616,22 +632,20 @@ function drawCardToPng(regNumber, fullName, category, qrSrc) {
 
     // ---- top row: brand (left) / issuer (right) ----
     ctx.textBaseline = "alphabetic";
-    ctx.font = "800 22px Sora, sans-serif";
-    ctx.fillStyle = "#F5E3BC";
     ctx.textAlign = "left";
-    ctx.font = "20px sans-serif";
-    ctx.fillText("🔥", padX, padTop + 20);
-    ctx.font = "800 22px Sora, sans-serif";
-    ctx.fillText("NYC 2026", padX + 30, padTop + 20);
+    drawFlameIcon(ctx, padX, padTop - 2, 26);
+    ctx.font = "800 26px Sora, sans-serif";
+    ctx.fillStyle = "#F5E3BC";
+    ctx.fillText("NYC 2026", padX + 36, padTop + 20);
 
     ctx.textAlign = "right";
-    ctx.font = "800 22px Sora, sans-serif";
+    ctx.font = "800 26px Sora, sans-serif";
     ctx.fillStyle = "#F5E3BC";
     ctx.fillText("LCDAI", CARD_W - padX, padTop + 20);
-    ctx.font = "600 11px Sora, sans-serif";
+    ctx.font = "600 13px Sora, sans-serif";
     ctx.fillStyle = "rgba(255,248,234,0.5)";
-    ctx.fillText("LIVING CHRIST DISCIPLES", CARD_W - padX, padTop + 40);
-    ctx.fillText("ASSEMBLY INT'L", CARD_W - padX, padTop + 54);
+    ctx.fillText("LIVING CHRIST DISCIPLES", CARD_W - padX, padTop + 42);
+    ctx.fillText("ASSEMBLY INT'L", CARD_W - padX, padTop + 58);
 
     // ---- chip + NFC icon ----
     var chipY = padTop + 62;
@@ -658,24 +672,23 @@ function drawCardToPng(regNumber, fullName, category, qrSrc) {
       ctx.stroke();
     });
 
-    // ---- reg number + name ----
-    var noY = chipY + 40 + 56;
-    ctx.textAlign = "left";
-    ctx.font = "700 32px Sora, sans-serif";
+    // ---- reg number + name — bold, centered, filling the card's middle ----
+    ctx.textAlign = "center";
+    ctx.font = "800 58px Sora, sans-serif";
     ctx.fillStyle = "#F0D28A";
-    ctx.fillText(regNumber, padX, noY);
+    ctx.fillText(regNumber, CARD_W / 2, CARD_H * 0.53);
 
-    ctx.font = "700 26px Sora, sans-serif";
+    ctx.font = "700 40px Sora, sans-serif";
     ctx.fillStyle = "#FFF8EA";
-    ctx.fillText((fullName || "").toUpperCase(), padX, noY + 46);
+    ctx.fillText((fullName || "").toUpperCase(), CARD_W / 2, CARD_H * 0.53 + 58);
 
     // ---- bottom row: category pill (left) / QR (right) ----
     var bottomY = CARD_H - 30;
-    ctx.font = "700 13px Sora, sans-serif";
+    ctx.font = "700 15px Sora, sans-serif";
     var catText = (category || "").toUpperCase();
-    var catPadX = 18;
+    var catPadX = 20;
     var catW = ctx.measureText(catText).width + catPadX * 2;
-    var catH = 34;
+    var catH = 40;
     var catY = bottomY - catH;
     roundRectPath(ctx, padX, catY, catW, catH, catH / 2);
     ctx.fillStyle = "rgba(245,227,188,0.08)";
@@ -686,10 +699,10 @@ function drawCardToPng(regNumber, fullName, category, qrSrc) {
     ctx.stroke();
     ctx.fillStyle = "#F5E3BC";
     ctx.textAlign = "left";
-    ctx.fillText(catText, padX + catPadX, catY + catH / 2 + 4);
+    ctx.fillText(catText, padX + catPadX, catY + catH / 2 + 5);
 
     if (qrImg) {
-      var qrSize = 52, qrPad = 4;
+      var qrSize = 66, qrPad = 5;
       var qrX = CARD_W - padX - qrSize - qrPad * 2;
       var qrY = bottomY - qrSize - qrPad * 2;
       roundRectPath(ctx, qrX, qrY, qrSize + qrPad * 2, qrSize + qrPad * 2, 6);
