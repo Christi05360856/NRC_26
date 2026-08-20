@@ -21,6 +21,16 @@
   .card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:20px; margin-bottom:16px; box-shadow:0 8px 24px -8px rgba(26,23,18,0.10);}
   label{display:block; font-size:13px; font-weight:600; color:var(--text-soft); margin-bottom:6px;}
   input{width:100%; padding:13px 14px; border-radius:10px; border:1.5px solid var(--line); font-size:16px; margin-bottom:14px; font-family:inherit;}
+  .pw-wrap{position:relative;}
+  .pw-wrap input{padding-right:46px;}
+  .pw-toggle{
+    position:absolute; right:4px; top:50%; transform:translateY(-50%);
+    width:auto; padding:8px; margin:0;
+    background:transparent; border:none; color:var(--muted);
+    cursor:pointer; line-height:0; display:flex; align-items:center;
+  }
+  .pw-toggle:hover{color:var(--gold);}
+  .pw-toggle:hover{color:var(--text);}
   input:focus{outline:none; border-color:var(--gold);}
   button{width:100%; padding:14px; border:none; border-radius:10px; font-weight:700; font-size:15px; cursor:pointer; font-family:inherit;}
   .btn-primary{background:linear-gradient(135deg, var(--gold), var(--amber)); color:#fff;}
@@ -79,7 +89,20 @@
     <label for="loginEmail">Email</label>
     <input type="email" id="loginEmail" autocomplete="username">
     <label for="loginPass">Password</label>
-    <input type="password" id="loginPass" autocomplete="current-password">
+    <div class="pw-wrap">
+      <input type="password" id="loginPass" autocomplete="current-password">
+      <button type="button" class="pw-toggle" id="pwToggle" aria-label="Show password">
+        <svg id="pwIconEye" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+        <svg id="pwIconEyeOff" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+          <path d="M3 3l18 18"/>
+          <path d="M10.6 5.1A10.9 10.9 0 0112 5c7 0 10.5 7 10.5 7a13.7 13.7 0 01-3.1 4.1M6.2 6.6C3.2 8.6 1.5 12 1.5 12s3.5 7 10.5 7c1.3 0 2.5-.2 3.6-.6"/>
+          <path d="M9.9 10a3 3 0 004.2 4.2"/>
+        </svg>
+      </button>
+    </div>
     <p class="error" id="loginError"></p>
     <button type="button" class="btn-primary" id="loginBtn">Log In</button>
   </div>
@@ -95,6 +118,7 @@
       <button type="button" class="tab-btn active" id="tabCheckIn">Check-In</button>
       <button type="button" class="tab-btn" id="tabWalkin">Walk-in Registration</button>
       <button type="button" class="tab-btn" id="tabList">Checked-In List</button>
+      <button type="button" class="tab-btn" id="tabRegistered">Registered List</button>
       <button type="button" class="tab-btn" id="tabExport">Export</button>
     </div>
 
@@ -107,6 +131,18 @@
         <p class="error" id="listError"></p>
         <ul class="recent-list" id="checkedInList"></ul>
         <p class="recent-empty" id="listEmpty">Tap Load / Refresh to see everyone checked in so far.</p>
+      </div>
+    </div>
+
+    <div id="registeredSection" class="hidden">
+      <div class="card">
+        <div class="staff-bar" style="margin-bottom:14px;">
+          <span id="registeredCount">Not loaded yet</span>
+          <button type="button" class="btn-ghost" id="registeredLoadBtn" style="width:auto; padding:8px 12px; font-size:12.5px;">Refresh</button>
+        </div>
+        <p class="error" id="registeredError"></p>
+        <ul class="recent-list" id="registeredList"></ul>
+        <p class="recent-empty" id="registeredEmpty">Tap Refresh to see everyone registered so far.</p>
       </div>
     </div>
 
@@ -425,29 +461,45 @@ searchBtn.addEventListener("click", doSearch);
 regInput.addEventListener("keydown", (e) => { if (e.key === "Enter") doSearch(); });
 loginPass.addEventListener("keydown", (e) => { if (e.key === "Enter") loginBtn.click(); });
 
+const pwToggle = document.getElementById("pwToggle");
+const pwIconEye = document.getElementById("pwIconEye");
+const pwIconEyeOff = document.getElementById("pwIconEyeOff");
+pwToggle.addEventListener("click", () => {
+  const showing = loginPass.type === "text";
+  loginPass.type = showing ? "password" : "text";
+  pwIconEye.style.display = showing ? "" : "none";
+  pwIconEyeOff.style.display = showing ? "none" : "";
+  pwToggle.setAttribute("aria-label", showing ? "Show password" : "Hide password");
+});
+
 /* ================= TABS ================= */
 const tabCheckIn = document.getElementById("tabCheckIn");
 const tabWalkin = document.getElementById("tabWalkin");
 const tabList = document.getElementById("tabList");
+const tabRegistered = document.getElementById("tabRegistered");
 const tabExport = document.getElementById("tabExport");
 const checkInSection = document.getElementById("checkInSection");
 const walkinSection = document.getElementById("walkinSection");
 const listSection = document.getElementById("listSection");
+const registeredSection = document.getElementById("registeredSection");
 const exportSection = document.getElementById("exportSection");
 
 function showTab(tab) {
   tabCheckIn.classList.toggle("active", tab === "checkin");
   tabWalkin.classList.toggle("active", tab === "walkin");
   tabList.classList.toggle("active", tab === "list");
+  tabRegistered.classList.toggle("active", tab === "registered");
   tabExport.classList.toggle("active", tab === "export");
   checkInSection.classList.toggle("hidden", tab !== "checkin");
   walkinSection.classList.toggle("hidden", tab !== "walkin");
   listSection.classList.toggle("hidden", tab !== "list");
+  registeredSection.classList.toggle("hidden", tab !== "registered");
   exportSection.classList.toggle("hidden", tab !== "export");
 }
 tabCheckIn.addEventListener("click", () => showTab("checkin"));
 tabWalkin.addEventListener("click", () => showTab("walkin"));
 tabList.addEventListener("click", () => showTab("list"));
+tabRegistered.addEventListener("click", () => showTab("registered"));
 tabExport.addEventListener("click", () => showTab("export"));
 
 /* ================= CHECKED-IN LIST ================= */
@@ -508,6 +560,48 @@ function renderCheckedInList(results) {
 }
 
 listLoadBtn.addEventListener("click", loadCheckedInList);
+
+/* ================= REGISTERED LIST ================= */
+// Same batching approach as the Checked-In List and Export — pages through
+// in groups of 5 (the security-rule cap) ordered by most recent signup
+// first. Shows only name / reg number / phone, since full detail already
+// lives in the Export tab — this is meant for a quick glance, refreshed
+// on demand, not a report.
+const registeredCount = document.getElementById("registeredCount");
+const registeredLoadBtn = document.getElementById("registeredLoadBtn");
+const registeredError = document.getElementById("registeredError");
+const registeredListEl = document.getElementById("registeredList");
+const registeredEmpty = document.getElementById("registeredEmpty");
+
+async function loadRegisteredList() {
+  registeredLoadBtn.disabled = true;
+  registeredLoadBtn.textContent = "Loading…";
+  registeredError.classList.remove("show");
+  try {
+    const all = await fetchAllRegistrations();
+    renderRegisteredList(all);
+  } catch (err) {
+    console.error("Loading registered list failed:", err);
+    registeredError.textContent = "Couldn't load the list. If this is the first time, open the browser console (F12) — Firestore may show a one-time \"create index\" link to click.";
+    registeredError.classList.add("show");
+  } finally {
+    registeredLoadBtn.disabled = false;
+    registeredLoadBtn.textContent = "Refresh";
+  }
+}
+
+function renderRegisteredList(results) {
+  registeredListEl.innerHTML = "";
+  registeredEmpty.classList.toggle("hidden", results.length > 0);
+  registeredCount.textContent = results.length + " registered";
+  results.forEach((r, i) => {
+    const li = document.createElement("li");
+    li.innerHTML = `<span>${results.length - i}. ${r.fullName || "—"} <span style="color:var(--muted)">· ${r.phone || "—"}</span></span><span class="rn">${r.regNumber || "—"}</span>`;
+    registeredListEl.appendChild(li);
+  });
+}
+
+registeredLoadBtn.addEventListener("click", loadRegisteredList);
 
 /* ================= WALK-IN REGISTRATION ================= */
 // Lets the registration unit get someone into the system on the spot —
@@ -674,8 +768,7 @@ walkinAnotherBtn.addEventListener("click", () => {
   walkinSuccessCard.classList.add("hidden");
 });
 
-
-  /* ================= EXPORT TO EXCEL ================= */
+/* ================= EXPORT TO EXCEL ================= */
 // Reuses the same paged-batches-of-5 approach as the Checked-In List, since
 // the security rules cap every list query at 5 docs for anyone without a
 // higher staff allowance. Pulls the WHOLE collection this way, not just
