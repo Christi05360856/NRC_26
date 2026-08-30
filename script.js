@@ -24,6 +24,7 @@ let _db = null;
 let _auth = null;
 let _firestoreFns = null;
 let _firebaseLoading = null;
+let _houseAssignmentLoading = null;
 
 function loadFirebase() {
   if (_firebaseLoading) return _firebaseLoading;
@@ -45,6 +46,16 @@ function loadFirebase() {
     return _firestoreFns;
   })();
   return _firebaseLoading;
+}
+
+// houseAssignment.js is the single shared "pick a random house safely"
+// module also used by the staff check-in page — loaded lazily here, same
+// pattern as Firebase itself, so it never slows down the page load for
+// people who are just browsing, not submitting.
+function loadHouseAssignment() {
+  if (_houseAssignmentLoading) return _houseAssignmentLoading;
+  _houseAssignmentLoading = import("./houseAssignment.js");
+  return _houseAssignmentLoading;
 }
 
 function formatRegNumberForCard(regNumber) {
@@ -69,11 +80,15 @@ function toDataUrl(url) {
 
 // Fills in and shows the reg card overlay. Used both right after a
 // successful submission and when an existing registrant looks their
-// card up via "Find your card".
-function renderCard(regNumber, fullName, feeCategory) {
+// card up via "Find your card". `house` is the display label (or the
+// "Pending — see registration desk" string) — blank/undefined is
+// treated as "not assigned yet" for registrations made before this
+// feature existed.
+function renderCard(regNumber, fullName, feeCategory, house) {
   const cardRegNumber = document.getElementById("cardRegNumber");
   const cardName = document.getElementById("cardName");
   const cardCategory = document.getElementById("cardCategory");
+  const cardHouse = document.getElementById("cardHouse");
   const cardQr = document.getElementById("cardQr");
   const successOverlay = document.getElementById("successOverlay");
 
@@ -81,8 +96,10 @@ function renderCard(regNumber, fullName, feeCategory) {
   if (cardRegNumber) cardRegNumber.textContent = formatRegNumberForCard(regNumber);
   if (cardName) cardName.textContent = fullName;
   if (cardCategory) cardCategory.textContent = feeCategory;
+  if (cardHouse) cardHouse.textContent = "🏠 " + (house || "House pending");
 
-  // Populate hidden export card
+  // Populate hidden export card (legacy — not currently in the DOM, kept
+  // no-op-safe in case it's reintroduced)
   const cardRegNumberExport = document.getElementById("cardRegNumberExport");
   const cardNameExport = document.getElementById("cardNameExport");
   const cardCategoryExport = document.getElementById("cardCategoryExport");
@@ -120,7 +137,6 @@ window._nycSubmit = async function() {
   const form = document.getElementById("regForm");
   const submitBtn = document.getElementById("submitBtn");
   const statusMsg = document.getElementById("statusMsg");
-  const successOverlay = document.getElementById("successOverlay");
 
   if (!form) return;
 
@@ -160,7 +176,10 @@ window._nycSubmit = async function() {
   };
 
   try {
-    const { collection, doc, setDoc, serverTimestamp, query, where, getDocs, limit } = await withTimeout(loadFirebase(), 20000);
+    const [{ collection, doc, query, where, getDocs, limit }, houseMod] = await withTimeout(
+      Promise.all([loadFirebase(), loadHouseAssignment()]),
+      20000
+    );
 
     const dupQuery = query(
       collection(_db, REGISTRATIONS_COLLECTION),
@@ -187,11 +206,17 @@ window._nycSubmit = async function() {
     payload.checkedIn = false;
     payload.checkedInAt = null;
     payload.checkedInBy = null;
-    payload.submittedAt = serverTimestamp();
-    await withTimeout(setDoc(docRef, payload), 20000);
+    payload.submittedAt = serverTimestampSafe();
+
+    // Creates the registration doc AND assigns a house, as one atomic
+    // transaction — see houseAssignment.js for why that matters.
+    const house = await withTimeout(
+      houseMod.createRegistrationWithHouse(_db, docRef, payload),
+      20000
+    );
 
     window._nycCardOverlayReason = "submit";
-    renderCard(regNumber, fullName, feeCategory);
+    renderCard(regNumber, fullName, feeCategory, house);
     if (typeof window._nycClearDraft === "function") window._nycClearDraft();
   } catch (err) {
     console.error("Registration failed:", err);
@@ -216,6 +241,13 @@ window._nycSubmit = async function() {
     }
   }
 };
+
+// serverTimestamp() itself is only available once firebase-firestore.js
+// has resolved — this small helper re-grabs it from the already-loaded
+// module without re-importing, so _nycSubmit above can call it inline.
+function serverTimestampSafe() {
+  return _firestoreFns ? _firestoreFns.serverTimestamp() : null;
+}
 
 window._nycFindCard = async function(mode, values) {
   const errEl = document.getElementById("findCardError");
@@ -261,7 +293,7 @@ window._nycFindCard = async function(mode, values) {
     }
     const d = snap.docs[0].data();
     window._nycCardOverlayReason = "find";
-    renderCard(d.regNumber, d.fullName, d.feeCategory);
+    renderCard(d.regNumber, d.fullName, d.feeCategory, d.house);
   } catch (err) {
     console.error("Find card failed:", err);
     let msg;
@@ -279,6 +311,3 @@ window._nycFindCard = async function(mode, values) {
 };
 
 console.log("[NYC2026] External script loaded — Firebase submit handler ready.");
-
-loadFirebase().catch(function() { /* real errors resurface at submit time */ });
-  
