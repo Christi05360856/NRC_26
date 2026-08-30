@@ -47,6 +47,23 @@ button{font-family:inherit;}
   background:transparent; color:#F5E3BC; font-weight:700; font-size:12px; cursor:pointer;
 }
 
+/* ================= HOUSE-LIVE BANNER ================= */
+.house-live-banner{
+  display:flex; flex-direction:column; align-items:center; gap:10px;
+  text-align:center;
+  background:rgba(200,149,26,0.08);
+  border:1.5px solid var(--gold);
+  border-radius:var(--radius-sm);
+  padding:14px 18px;
+  margin-bottom:24px;
+  font-size:13.5px; font-weight:600; color:var(--text);
+}
+.house-live-banner button{
+  padding:9px 16px; border-radius:8px; border:none;
+  background:linear-gradient(135deg, var(--gold), var(--amber));
+  color:#fff; font-weight:700; font-size:12.5px; cursor:pointer;
+}
+
 /* ================= FIND YOUR CARD ================= */
 .find-card-wrap{margin-top:18px; text-align:center;}
 .link-btn{
@@ -523,13 +540,20 @@ input[type=date]{color-scheme:light;}
   max-width:100%;
 }
 
-/* ---- footer: category pill + QR ---- */
+/* ---- footer: category + house badges, and QR ---- */
 .reg-card-bottom{
   display:flex;
   align-items:flex-end;
   justify-content:space-between;
   gap:0.7em;
   min-width:0;
+}
+.reg-card-badges{
+  display:flex;
+  flex-direction:column;
+  gap:0.4em;
+  min-width:0;
+  flex:1;
 }
 .reg-card-category{
   display:inline-block;
@@ -547,6 +571,24 @@ input[type=date]{color-scheme:light;}
   flex-shrink:1;
   overflow:hidden;
   text-overflow:ellipsis;
+}
+.reg-card-house{
+  display:inline-block;
+  padding:0.42em 0.8em;
+  border-radius:1.2em;
+  border:1px solid rgba(245,227,188,0.22);
+  background:rgba(245,227,188,0.04);
+  font-size:0.58em;
+  font-weight:700;
+  letter-spacing:0.03em;
+  color:rgba(245,227,188,0.85);
+  text-transform:uppercase;
+  white-space:nowrap;
+  min-width:0;
+  flex-shrink:1;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width:100%;
 }
 .reg-card-qr{
   flex-shrink:0;
