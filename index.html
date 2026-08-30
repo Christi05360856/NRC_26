@@ -24,6 +24,14 @@
   <!-- ============ STEP 0 — WELCOME ============ -->
   <section class="step active" data-step="0">
     <div class="step-inner welcome">
+
+      <!-- House assignments announcement — flip HOUSE_ASSIGNMENTS_LIVE
+           to true in the script below once the batch has been run. -->
+      <div class="house-live-banner hidden" id="houseBanner">
+        <span>🏠 House assignments are now live! Already registered?</span>
+        <button type="button" id="houseBannerBtn">Find your card</button>
+      </div>
+
       <div class="flame-mark">
         <svg viewBox="0 0 48 48" width="44" height="44" fill="none">
           <path d="M24 4C24 4 14 15 14 26C14 33.7 18.7 40 24 40C29.3 40 34 33.7 34 26C34 15 24 4 24 4Z" fill="#D4A017"/>
@@ -328,7 +336,10 @@
         <div class="reg-card-name" id="cardName">—</div>
 
         <div class="reg-card-bottom">
-          <span class="reg-card-category" id="cardCategory">—</span>
+          <div class="reg-card-badges">
+            <span class="reg-card-category" id="cardCategory">—</span>
+            <span class="reg-card-house" id="cardHouse">—</span>
+          </div>
           <div class="reg-card-qr">
             <img id="cardQr" src="" alt="Registration QR code" width="120" height="120">
           </div>
@@ -351,6 +362,11 @@
    after all the form HTML above it, every element it needs already
    exists in the DOM by the time this line executes. */
 
+// Flip this to true once the one-time "Assign houses now" batch has
+// been run on the staff page — shows the announcement banner to
+// anyone who opens (or re-opens) the registration link.
+var HOUSE_ASSIGNMENTS_LIVE = false;
+
 var steps = Array.from(document.querySelectorAll(".step"));
 var progressFill = document.getElementById("progressFill");
 var feeOtherBlock = document.getElementById("feeOtherBlock");
@@ -358,6 +374,18 @@ var volunteerBlock = document.getElementById("volunteerBlock");
 var successOverlay = document.getElementById("successOverlay");
 var form = document.getElementById("regForm");
 var currentIndex = 0;
+
+var houseBanner = document.getElementById("houseBanner");
+var houseBannerBtn = document.getElementById("houseBannerBtn");
+if (HOUSE_ASSIGNMENTS_LIVE && houseBanner) houseBanner.classList.remove("hidden");
+if (houseBannerBtn) {
+  houseBannerBtn.addEventListener("click", function() {
+    var panel = document.getElementById("findCardPanel");
+    var toggle = document.getElementById("findCardToggle");
+    if (panel && panel.classList.contains("hidden") && toggle) toggle.click();
+    if (panel) panel.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+}
 
 function showStep(index) {
   steps.forEach(function(s, i) {
@@ -575,7 +603,7 @@ function drawFlameIcon(ctx, x, y, size) {
   ctx.restore();
 }
 
-function drawCardToPng(regNumber, fullName, category, qrSrc) {
+function drawCardToPng(regNumber, fullName, category, house, qrSrc) {
   return Promise.all([waitForFonts(), loadImageSafe(qrSrc)]).then(function(results) {
     var qrImg = results[1];
 
@@ -676,14 +704,15 @@ function drawCardToPng(regNumber, fullName, category, qrSrc) {
     ctx.textAlign = "center";
     ctx.font = "800 58px Sora, sans-serif";
     ctx.fillStyle = "#F0D28A";
-    ctx.fillText(regNumber, CARD_W / 2, CARD_H * 0.53);
+    ctx.fillText(regNumber, CARD_W / 2, CARD_H * 0.50);
 
     ctx.font = "700 40px Sora, sans-serif";
     ctx.fillStyle = "#FFF8EA";
-    ctx.fillText((fullName || "").toUpperCase(), CARD_W / 2, CARD_H * 0.53 + 58);
+    ctx.fillText((fullName || "").toUpperCase(), CARD_W / 2, CARD_H * 0.50 + 52);
 
-    // ---- bottom row: category pill (left) / QR (right) ----
+    // ---- bottom-left: category pill + house pill (stacked) ----
     var bottomY = CARD_H - 30;
+
     ctx.font = "700 15px Sora, sans-serif";
     var catText = (category || "").toUpperCase();
     var catPadX = 20;
@@ -700,6 +729,22 @@ function drawCardToPng(regNumber, fullName, category, qrSrc) {
     ctx.fillStyle = "#F5E3BC";
     ctx.textAlign = "left";
     ctx.fillText(catText, padX + catPadX, catY + catH / 2 + 5);
+
+    ctx.font = "700 13px Sora, sans-serif";
+    var houseText = "🏠 " + ((house || "House pending").toUpperCase());
+    var houseGap = 10;
+    var houseH = 34;
+    var houseY = catY - houseGap - houseH;
+    var houseW = ctx.measureText(houseText).width + catPadX * 2;
+    roundRectPath(ctx, padX, houseY, houseW, houseH, houseH / 2);
+    ctx.fillStyle = "rgba(245,227,188,0.04)";
+    ctx.fill();
+    ctx.strokeStyle = "rgba(245,227,188,0.22)";
+    ctx.lineWidth = 1;
+    roundRectPath(ctx, padX, houseY, houseW, houseH, houseH / 2);
+    ctx.stroke();
+    ctx.fillStyle = "rgba(245,227,188,0.9)";
+    ctx.fillText(houseText, padX + catPadX, houseY + houseH / 2 + 4.5);
 
     if (qrImg) {
       var qrSize = 66, qrPad = 5;
@@ -722,6 +767,7 @@ function downloadCard() {
   var regNoEl = document.getElementById("cardRegNumber");
   var nameEl = document.getElementById("cardName");
   var categoryEl = document.getElementById("cardCategory");
+  var houseEl = document.getElementById("cardHouse");
   var qrEl = document.getElementById("cardQr");
   if (!regNoEl) return;
 
@@ -730,9 +776,11 @@ function downloadCard() {
   var regNumber = (regNoEl.textContent || "").trim();
   var fullName = (nameEl ? nameEl.textContent : "") || "";
   var category = (categoryEl ? categoryEl.textContent : "") || "";
+  // Strip the leading "🏠 " the live card shows — the canvas draws its own.
+  var house = ((houseEl ? houseEl.textContent : "") || "").replace(/^🏠\s*/, "");
   var qrSrc = qrEl ? qrEl.src : "";
 
-  drawCardToPng(regNumber, fullName, category, qrSrc)
+  drawCardToPng(regNumber, fullName, category, house, qrSrc)
     .then(function(dataUrl) {
       var link = document.createElement("a");
       link.download = (regNumber.replace(/\s|·/g, "") || "nyc2026-card") + ".png";
