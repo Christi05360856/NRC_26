@@ -20,7 +20,7 @@
   h1{font-size:22px; margin:0 0 24px;}
   .card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:20px; margin-bottom:16px; box-shadow:0 8px 24px -8px rgba(26,23,18,0.10);}
   label{display:block; font-size:13px; font-weight:600; color:var(--text-soft); margin-bottom:6px;}
-  input{width:100%; padding:13px 14px; border-radius:10px; border:1.5px solid var(--line); font-size:16px; margin-bottom:14px; font-family:inherit;}
+  input, select{width:100%; padding:13px 14px; border-radius:10px; border:1.5px solid var(--line); font-size:16px; margin-bottom:14px; font-family:inherit;}
   .pw-wrap{position:relative;}
   .pw-wrap input{padding-right:46px;}
   .pw-toggle{
@@ -31,7 +31,7 @@
   }
   .pw-toggle:hover{color:var(--gold);}
   .pw-toggle:hover{color:var(--text);}
-  input:focus{outline:none; border-color:var(--gold);}
+  input:focus, select:focus{outline:none; border-color:var(--gold);}
   button{width:100%; padding:14px; border:none; border-radius:10px; font-weight:700; font-size:15px; cursor:pointer; font-family:inherit;}
   .btn-primary{background:linear-gradient(135deg, var(--gold), var(--amber)); color:#fff;}
   .btn-primary:disabled{opacity:0.5; cursor:not-allowed;}
@@ -76,6 +76,11 @@
   .recent-list li:first-child{border-top:none;}
   .recent-list .rn{font-weight:700; color:var(--gold);}
   .recent-empty{color:var(--muted); font-size:13px; text-align:center; padding:4px 0;}
+
+  .house-override{margin-top:18px; padding-top:16px; border-top:1px dashed var(--line);}
+  .house-summary-row{display:flex; justify-content:space-between; padding:8px 0; border-top:1px solid var(--line); font-size:13px;}
+  .house-summary-row:first-child{border-top:none;}
+  .house-summary-row .full{color:var(--red); font-weight:700;}
 </style>
 </head>
 <body>
@@ -117,6 +122,7 @@
     <div class="tab-bar">
       <button type="button" class="tab-btn active" id="tabCheckIn">Check-In</button>
       <button type="button" class="tab-btn" id="tabWalkin">Walk-in Registration</button>
+      <button type="button" class="tab-btn" id="tabHouses">Houses</button>
       <button type="button" class="tab-btn" id="tabList">Checked-In List</button>
       <button type="button" class="tab-btn" id="tabRegistered">Registered List</button>
       <button type="button" class="tab-btn" id="tabExport">Export</button>
@@ -146,10 +152,28 @@
       </div>
     </div>
 
+    <div id="housesSection" class="hidden">
+      <div class="card">
+        <div class="staff-bar" style="margin-bottom:14px;">
+          <span id="housesSummaryLabel">Not loaded yet</span>
+          <button type="button" class="btn-ghost" id="housesRefreshBtn" style="width:auto; padding:8px 12px; font-size:12.5px;">Refresh</button>
+        </div>
+        <p class="error" id="housesError"></p>
+        <div id="housesSummaryList"></div>
+      </div>
+      <div class="card">
+        <label style="margin-bottom:8px;">One-time catch-up assignment</label>
+        <p style="font-size:12.5px; color:var(--muted); margin:-2px 0 14px;">Finds every registered person who doesn't have a house yet, shuffles them within their gender, and randomly assigns each one into whichever houses still have space (never a predictable fill order — that's what keeps existing friend groups from landing together). Safe to run more than once — it only ever touches people who are still unassigned or still "Pending."</p>
+        <button type="button" class="btn-primary" id="assignHousesBtn">Assign houses now</button>
+        <p class="error" id="assignHousesError"></p>
+        <ul class="recent-list" id="assignHousesLog"></ul>
+      </div>
+    </div>
+
     <div id="exportSection" class="hidden">
       <div class="card">
         <label>All registrations</label>
-        <p style="font-size:12.5px; color:var(--muted); margin:-6px 0 14px;">Downloads every registered attendee as a spreadsheet — name, phone, category, check-in status, everything.</p>
+        <p style="font-size:12.5px; color:var(--muted); margin:-6px 0 14px;">Downloads every registered attendee as a spreadsheet — name, phone, category, house, check-in status, everything.</p>
         <p class="error" id="exportError"></p>
         <button type="button" class="btn-ghost" id="exportBtn" style="margin-top:0;">Export to Excel</button>
       </div>
@@ -172,8 +196,16 @@
       <div class="row"><span class="k">Branch / State</span><span class="v" id="resBranch"></span></div>
       <div class="row"><span class="k">Category</span><span class="v" id="resCategory"></span></div>
       <div class="row"><span class="k">Attending</span><span class="v" id="resAttending"></span></div>
+      <div class="row"><span class="k">House</span><span class="v" id="resHouse"></span></div>
       <div class="row hidden" id="resCheckedRow"><span class="k">Checked in</span><span class="v" id="resCheckedInfo"></span></div>
       <button type="button" class="btn-primary" id="confirmBtn" style="margin-top:18px;">Confirm Check-In</button>
+
+      <div class="house-override">
+        <label for="houseOverrideSelect">Move to a different house</label>
+        <select id="houseOverrideSelect"><option value="">Select…</option></select>
+        <button type="button" class="btn-ghost" id="houseOverrideBtn" style="margin-top:0;">Move</button>
+        <p class="error" id="houseOverrideError"></p>
+      </div>
     </div>
 
     <div class="card hidden" id="notFoundCard">
@@ -198,6 +230,7 @@
           <span class="status-pill checked">Registered &amp; checked in</span>
           <p class="big-no" id="walkinSuccessNo">—</p>
           <p class="big-name" id="walkinSuccessName">—</p>
+          <p class="big-name" id="walkinSuccessHouse" style="font-weight:700; color:var(--gold);">—</p>
           <button type="button" class="btn-primary" id="walkinAnotherBtn">Register Next Person</button>
         </div>
       </div>
@@ -241,7 +274,7 @@
         </fieldset>
 
         <label for="wFee">Registration Category</label>
-        <select id="wFee" required style="width:100%; padding:13px 14px; border-radius:10px; border:1.5px solid var(--line); font-size:16px; margin-bottom:14px; font-family:inherit;">
+        <select id="wFee" required>
           <option value="">Select…</option>
           <option value="₦2,000">₦2,000</option>
           <option value="₦3,000">₦3,000</option>
@@ -265,7 +298,7 @@
         </fieldset>
         <div id="wVolunteerBlock" class="hidden">
           <label for="wVolunteerUnit">Preferred unit</label>
-          <select id="wVolunteerUnit" style="width:100%; padding:13px 14px; border-radius:10px; border:1.5px solid var(--line); font-size:16px; margin-bottom:14px; font-family:inherit;">
+          <select id="wVolunteerUnit">
             <option value="">Select…</option>
             <option>Sanitation / Sanctuary Keeper</option>
             <option>Electronics &amp; Electrical</option>
@@ -301,7 +334,15 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
-import { getFirestore, collection, doc, setDoc, query, where, orderBy, startAfter, getDocs, updateDoc, serverTimestamp, limit } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+import { getFirestore, collection, doc, getDoc, setDoc, query, where, orderBy, startAfter, getDocs, updateDoc, serverTimestamp, limit } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+import {
+  HOUSE_COUNTS_COLLECTION,
+  allHouseIds,
+  houseIdsForGender,
+  houseLabel,
+  assignHouseToExisting,
+  manuallySetHouse
+} from "./houseAssignment.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAgmrQl_89WilbnudAMdrwmICos1Gc2VwE",
@@ -418,6 +459,7 @@ function renderResult(data) {
   document.getElementById("resBranch").textContent = [data.branch, data.state].filter(Boolean).join(", ") || "—";
   document.getElementById("resCategory").textContent = data.feeCategory || "—";
   document.getElementById("resAttending").textContent = data.attending || "—";
+  document.getElementById("resHouse").textContent = data.house || "Not assigned yet";
 
   const pillWrap = document.getElementById("statusPillWrap");
   const checkedRow = document.getElementById("resCheckedRow");
@@ -435,6 +477,8 @@ function renderResult(data) {
     confirmBtn.textContent = "Confirm Check-In";
     confirmBtn.disabled = false;
   }
+
+  populateHouseOverrideSelect(data);
 }
 
 confirmBtn.addEventListener("click", async () => {
@@ -472,14 +516,70 @@ pwToggle.addEventListener("click", () => {
   pwToggle.setAttribute("aria-label", showing ? "Show password" : "Hide password");
 });
 
+/* ================= HOUSE OVERRIDE (manual edge cases) ================= */
+const houseOverrideSelect = document.getElementById("houseOverrideSelect");
+const houseOverrideBtn = document.getElementById("houseOverrideBtn");
+const houseOverrideError = document.getElementById("houseOverrideError");
+
+function populateHouseOverrideSelect(data) {
+  houseOverrideSelect.innerHTML = "";
+  const blank = document.createElement("option");
+  blank.value = "";
+  blank.textContent = "Select…";
+  houseOverrideSelect.appendChild(blank);
+
+  const pendingOpt = document.createElement("option");
+  pendingOpt.value = "__pending__";
+  pendingOpt.textContent = "Pending (unassign)";
+  houseOverrideSelect.appendChild(pendingOpt);
+
+  if (!data.gender) return;
+  houseIdsForGender(data.gender).forEach((id, i) => {
+    const opt = document.createElement("option");
+    opt.value = id;
+    opt.textContent = houseLabel(data.gender, i);
+    houseOverrideSelect.appendChild(opt);
+  });
+  houseOverrideSelect.value = data.houseId || "";
+}
+
+houseOverrideBtn.addEventListener("click", async () => {
+  houseOverrideError.classList.remove("show");
+  if (!currentDocRef || !currentData) return;
+  const raw = houseOverrideSelect.value;
+  if (!raw) {
+    houseOverrideError.textContent = "Choose a house first.";
+    houseOverrideError.classList.add("show");
+    return;
+  }
+  const newHouseId = raw === "__pending__" ? null : raw;
+  houseOverrideBtn.disabled = true;
+  houseOverrideBtn.textContent = "Moving…";
+  try {
+    const newLabel = await manuallySetHouse(db, currentDocRef, currentData.houseId || null, newHouseId, currentData.gender);
+    currentData.house = newLabel;
+    currentData.houseId = newHouseId;
+    renderResult(currentData);
+  } catch (err) {
+    console.error("House override failed:", err);
+    houseOverrideError.textContent = err && err.message ? err.message : "Couldn't move them — try again.";
+    houseOverrideError.classList.add("show");
+  } finally {
+    houseOverrideBtn.disabled = false;
+    houseOverrideBtn.textContent = "Move";
+  }
+});
+
 /* ================= TABS ================= */
 const tabCheckIn = document.getElementById("tabCheckIn");
 const tabWalkin = document.getElementById("tabWalkin");
+const tabHouses = document.getElementById("tabHouses");
 const tabList = document.getElementById("tabList");
 const tabRegistered = document.getElementById("tabRegistered");
 const tabExport = document.getElementById("tabExport");
 const checkInSection = document.getElementById("checkInSection");
 const walkinSection = document.getElementById("walkinSection");
+const housesSection = document.getElementById("housesSection");
 const listSection = document.getElementById("listSection");
 const registeredSection = document.getElementById("registeredSection");
 const exportSection = document.getElementById("exportSection");
@@ -487,17 +587,20 @@ const exportSection = document.getElementById("exportSection");
 function showTab(tab) {
   tabCheckIn.classList.toggle("active", tab === "checkin");
   tabWalkin.classList.toggle("active", tab === "walkin");
+  tabHouses.classList.toggle("active", tab === "houses");
   tabList.classList.toggle("active", tab === "list");
   tabRegistered.classList.toggle("active", tab === "registered");
   tabExport.classList.toggle("active", tab === "export");
   checkInSection.classList.toggle("hidden", tab !== "checkin");
   walkinSection.classList.toggle("hidden", tab !== "walkin");
+  housesSection.classList.toggle("hidden", tab !== "houses");
   listSection.classList.toggle("hidden", tab !== "list");
   registeredSection.classList.toggle("hidden", tab !== "registered");
   exportSection.classList.toggle("hidden", tab !== "export");
 }
 tabCheckIn.addEventListener("click", () => showTab("checkin"));
 tabWalkin.addEventListener("click", () => showTab("walkin"));
+tabHouses.addEventListener("click", () => showTab("houses"));
 tabList.addEventListener("click", () => showTab("list"));
 tabRegistered.addEventListener("click", () => showTab("registered"));
 tabExport.addEventListener("click", () => showTab("export"));
@@ -554,7 +657,7 @@ function renderCheckedInList(results) {
   listCount.textContent = results.length + " checked in";
   results.forEach((r, i) => {
     const li = document.createElement("li");
-    li.innerHTML = `<span>${results.length - i}. ${r.fullName || "—"} <span style="color:var(--muted)">· ${formatCheckInTime(r.checkedInAt)}</span></span><span class="rn">${r.regNumber || "—"}</span>`;
+    li.innerHTML = `<span>${results.length - i}. ${r.fullName || "—"} <span style="color:var(--muted)">· ${formatCheckInTime(r.checkedInAt)} · ${r.house || "no house"}</span></span><span class="rn">${r.regNumber || "—"}</span>`;
     checkedInList.appendChild(li);
   });
 }
@@ -564,9 +667,9 @@ listLoadBtn.addEventListener("click", loadCheckedInList);
 /* ================= REGISTERED LIST ================= */
 // Same batching approach as the Checked-In List and Export — pages through
 // in groups of 5 (the security-rule cap) ordered by most recent signup
-// first. Shows only name / reg number / phone, since full detail already
-// lives in the Export tab — this is meant for a quick glance, refreshed
-// on demand, not a report.
+// first. Shows only name / reg number / phone / house, since full detail
+// already lives in the Export tab — this is meant for a quick glance,
+// refreshed on demand, not a report.
 const registeredCount = document.getElementById("registeredCount");
 const registeredLoadBtn = document.getElementById("registeredLoadBtn");
 const registeredError = document.getElementById("registeredError");
@@ -596,17 +699,115 @@ function renderRegisteredList(results) {
   registeredCount.textContent = results.length + " registered";
   results.forEach((r, i) => {
     const li = document.createElement("li");
-    li.innerHTML = `<span>${results.length - i}. ${r.fullName || "—"} <span style="color:var(--muted)">· ${r.phone || "—"}</span></span><span class="rn">${r.regNumber || "—"}</span>`;
+    li.innerHTML = `<span>${results.length - i}. ${r.fullName || "—"} <span style="color:var(--muted)">· ${r.phone || "—"} · ${r.house || "no house"}</span></span><span class="rn">${r.regNumber || "—"}</span>`;
     registeredListEl.appendChild(li);
   });
 }
 
 registeredLoadBtn.addEventListener("click", loadRegisteredList);
 
+/* ================= HOUSES TAB ================= */
+// Live capacity summary (read-only) + the one-time catch-up batch for
+// anyone who registered before this feature existed.
+const housesSummaryLabel = document.getElementById("housesSummaryLabel");
+const housesRefreshBtn = document.getElementById("housesRefreshBtn");
+const housesError = document.getElementById("housesError");
+const housesSummaryList = document.getElementById("housesSummaryList");
+const assignHousesBtn = document.getElementById("assignHousesBtn");
+const assignHousesError = document.getElementById("assignHousesError");
+const assignHousesLog = document.getElementById("assignHousesLog");
+
+async function loadHousesSummary() {
+  housesRefreshBtn.disabled = true;
+  housesRefreshBtn.textContent = "Loading…";
+  housesError.classList.remove("show");
+  try {
+    const ids = allHouseIds();
+    const docs = await Promise.all(ids.map((id) => getDocs(query(collection(db, HOUSE_COUNTS_COLLECTION), where("__name__", "==", id), limit(1)))));
+    housesSummaryList.innerHTML = "";
+    let totalCount = 0, totalCapacity = 0;
+    docs.forEach((snap, i) => {
+      if (snap.empty) {
+        const row = document.createElement("div");
+        row.className = "house-summary-row";
+        row.innerHTML = `<span>${ids[i]}</span><span class="full">not seeded yet</span>`;
+        housesSummaryList.appendChild(row);
+        return;
+      }
+      const d = snap.docs[0].data();
+      totalCount += d.count || 0;
+      totalCapacity += d.capacity || 0;
+      const full = (d.count || 0) >= (d.capacity || 0);
+      const row = document.createElement("div");
+      row.className = "house-summary-row";
+      row.innerHTML = `<span>${ids[i]} · ${d.name || ""} (${d.gender || ""})</span><span class="${full ? "full" : ""}">${d.count || 0} / ${d.capacity || 0}${full ? " · FULL" : ""}</span>`;
+      housesSummaryList.appendChild(row);
+    });
+    housesSummaryLabel.textContent = totalCount + " / " + totalCapacity + " assigned";
+  } catch (err) {
+    console.error("Loading house summary failed:", err);
+    housesError.textContent = "Couldn't load house counts. Make sure the 10 houseCounts documents have been seeded (see the note at the bottom of houseAssignment.js).";
+    housesError.classList.add("show");
+  } finally {
+    housesRefreshBtn.disabled = false;
+    housesRefreshBtn.textContent = "Refresh";
+  }
+}
+housesRefreshBtn.addEventListener("click", loadHousesSummary);
+
+function shuffleInPlace(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+assignHousesBtn.addEventListener("click", async () => {
+  assignHousesError.classList.remove("show");
+  assignHousesLog.innerHTML = "";
+  assignHousesBtn.disabled = true;
+  assignHousesBtn.textContent = "Finding unassigned people…";
+  try {
+    const all = await fetchAllRegistrations();
+    const unassigned = shuffleInPlace(
+      all.filter((r) => !r.houseId && (!r.house || r.house === "Pending — see registration desk"))
+    );
+    if (unassigned.length === 0) {
+      assignHousesLog.innerHTML = '<li><span>Nobody needs assigning — everyone already has a house.</span></li>';
+      return;
+    }
+    assignHousesBtn.textContent = "Assigning 0 / " + unassigned.length + "…";
+    let done = 0;
+    for (const reg of unassigned) {
+      // Need the live doc ref, not just the data — re-look-up by regNumber.
+      const snap = await getDocs(query(collection(db, REGISTRATIONS_COLLECTION), where("regNumber", "==", reg.regNumber), limit(1)));
+      if (snap.empty) continue;
+      const label = await assignHouseToExisting(db, snap.docs[0].ref, reg.gender);
+      done++;
+      assignHousesBtn.textContent = "Assigning " + done + " / " + unassigned.length + "…";
+      const li = document.createElement("li");
+      li.innerHTML = `<span>${reg.fullName || "—"}</span><span class="rn">${label}</span>`;
+      assignHousesLog.prepend(li);
+    }
+    await loadHousesSummary();
+  } catch (err) {
+    console.error("Batch house assignment failed:", err);
+    assignHousesError.textContent = "Something went wrong partway through — it's safe to click \"Assign houses now\" again, it will only pick up whoever is still unassigned.";
+    assignHousesError.classList.add("show");
+  } finally {
+    assignHousesBtn.disabled = false;
+    assignHousesBtn.textContent = "Assign houses now";
+  }
+});
+
 /* ================= WALK-IN REGISTRATION ================= */
 // Lets the registration unit get someone into the system on the spot —
 // same schema and the same duplicate check the public form uses, so it
 // can never create a record the security rules wouldn't already accept.
+// House assignment reuses the exact same random-with-overflow-protection
+// logic as the public form (assignHouseToExisting, called right after
+// setDoc), so a walk-in is never treated any differently.
 // After create, if "mark as checked in now" is ticked, it makes one more
 // allowed call (update, staff-only, checkedIn/checkedInAt/checkedInBy
 // only) to check them in immediately, since standing at the desk being
@@ -622,6 +823,7 @@ const dupDismissBtn = document.getElementById("dupDismissBtn");
 const walkinSuccessCard = document.getElementById("walkinSuccessCard");
 const walkinSuccessNo = document.getElementById("walkinSuccessNo");
 const walkinSuccessName = document.getElementById("walkinSuccessName");
+const walkinSuccessHouse = document.getElementById("walkinSuccessHouse");
 const walkinAnotherBtn = document.getElementById("walkinAnotherBtn");
 const wFee = document.getElementById("wFee");
 const wFeeOtherBlock = document.getElementById("wFeeOtherBlock");
@@ -646,7 +848,7 @@ function renderRecentList() {
   recentEmpty.classList.toggle("hidden", sessionRegistered.length > 0);
   sessionRegistered.slice().reverse().forEach((entry) => {
     const li = document.createElement("li");
-    li.innerHTML = `<span>${entry.name}</span><span class="rn">${entry.regNumber}</span>`;
+    li.innerHTML = `<span>${entry.name} <span style="color:var(--muted)">· ${entry.house}</span></span><span class="rn">${entry.regNumber}</span>`;
     recentList.appendChild(li);
   });
 }
@@ -721,12 +923,17 @@ walkinForm.addEventListener("submit", async (e) => {
       volunteer: volunteer.value,
       volunteerUnit: volunteer.value === "Yes" ? volunteerUnit : "",
       regNumber,
+      house: "Pending — see registration desk",
+      houseId: null,
       checkedIn: false,
       checkedInAt: null,
       checkedInBy: null,
       submittedAt: serverTimestamp()
     };
     await setDoc(docRef, payload);
+
+    // Same random-with-overflow-protection assignment as the public form.
+    const house = await assignHouseToExisting(db, docRef, gender.value);
 
     if (markCheckedIn) {
       await updateDoc(docRef, {
@@ -736,11 +943,12 @@ walkinForm.addEventListener("submit", async (e) => {
       });
     }
 
-    sessionRegistered.push({ name: fullName, regNumber });
+    sessionRegistered.push({ name: fullName, regNumber, house });
     renderRecentList();
 
     walkinSuccessNo.textContent = regNumber;
     walkinSuccessName.textContent = fullName;
+    walkinSuccessHouse.textContent = house;
     walkinSuccessCard.classList.remove("hidden");
     resetWalkinForm();
   } catch (err) {
@@ -828,6 +1036,7 @@ exportBtn.addEventListener("click", async () => {
       "Occupation": r.occupation || "",
       "Attending": r.attending || "",
       "Fee Category": r.feeCategory || "",
+      "House": r.house || "",
       "Volunteer": r.volunteer || "",
       "Volunteer Unit": r.volunteerUnit || "",
       "Checked In": r.checkedIn ? "Yes" : "No",
