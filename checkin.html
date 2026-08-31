@@ -793,7 +793,7 @@ assignHousesBtn.addEventListener("click", async () => {
     await loadHousesSummary();
   } catch (err) {
     console.error("Batch house assignment failed:", err);
-    assignHousesError.textContent = "Something went wrong partway through — it's safe to click \"Assign houses now\" again, it will only pick up whoever is still unassigned.";
+    assignHousesError.textContent = (err && (err.message || err.code) ? err.message || err.code : "Unknown error") + ". Safe to retry — only unassigned people will be touched.";
     assignHousesError.classList.add("show");
   } finally {
     assignHousesBtn.disabled = false;
