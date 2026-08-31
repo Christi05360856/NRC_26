@@ -334,11 +334,11 @@
 
         <div class="reg-card-no" id="cardRegNumber">—</div>
         <div class="reg-card-name" id="cardName">—</div>
+        <div class="reg-card-house-main" id="cardHouse">—</div>
 
         <div class="reg-card-bottom">
           <div class="reg-card-badges">
             <span class="reg-card-category" id="cardCategory">—</span>
-            <span class="reg-card-house" id="cardHouse">—</span>
           </div>
           <div class="reg-card-qr">
             <img id="cardQr" src="" alt="Registration QR code" width="120" height="120">
@@ -710,7 +710,21 @@ function drawCardToPng(regNumber, fullName, category, house, qrSrc) {
     ctx.fillStyle = "#FFF8EA";
     ctx.fillText((fullName || "").toUpperCase(), CARD_W / 2, CARD_H * 0.50 + 52);
 
-    // ---- bottom-left: category pill + house pill (stacked) ----
+    // ---- house — large, bold, gold, centered directly under the name.
+    // Font size shrinks automatically for long house names so it never
+    // runs off the edge of the card. ----
+    var houseText = "🏠 " + ((house || "House pending").toUpperCase());
+    var maxHouseWidth = CARD_W - padX * 2;
+    var houseFontSize = 38;
+    ctx.font = "800 " + houseFontSize + "px Sora, sans-serif";
+    while (ctx.measureText(houseText).width > maxHouseWidth && houseFontSize > 20) {
+      houseFontSize -= 2;
+      ctx.font = "800 " + houseFontSize + "px Sora, sans-serif";
+    }
+    ctx.fillStyle = "#F0D28A";
+    ctx.fillText(houseText, CARD_W / 2, CARD_H * 0.50 + 52 + 62);
+
+    // ---- bottom-left: category pill ----
     var bottomY = CARD_H - 30;
 
     ctx.font = "700 15px Sora, sans-serif";
@@ -729,22 +743,6 @@ function drawCardToPng(regNumber, fullName, category, house, qrSrc) {
     ctx.fillStyle = "#F5E3BC";
     ctx.textAlign = "left";
     ctx.fillText(catText, padX + catPadX, catY + catH / 2 + 5);
-
-    ctx.font = "700 13px Sora, sans-serif";
-    var houseText = "🏠 " + ((house || "House pending").toUpperCase());
-    var houseGap = 10;
-    var houseH = 34;
-    var houseY = catY - houseGap - houseH;
-    var houseW = ctx.measureText(houseText).width + catPadX * 2;
-    roundRectPath(ctx, padX, houseY, houseW, houseH, houseH / 2);
-    ctx.fillStyle = "rgba(245,227,188,0.04)";
-    ctx.fill();
-    ctx.strokeStyle = "rgba(245,227,188,0.22)";
-    ctx.lineWidth = 1;
-    roundRectPath(ctx, padX, houseY, houseW, houseH, houseH / 2);
-    ctx.stroke();
-    ctx.fillStyle = "rgba(245,227,188,0.9)";
-    ctx.fillText(houseText, padX + catPadX, houseY + houseH / 2 + 4.5);
 
     if (qrImg) {
       var qrSize = 66, qrPad = 5;
