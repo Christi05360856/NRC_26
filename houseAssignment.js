@@ -19,10 +19,14 @@
 //
 // The staff page will show "not seeded yet" if any doc is missing.
 //
-// NOTE: the two count-increment writes below use t.set(..., { merge: true })
-// rather than t.update(). t.update() throws "document doesn't exist" if the
-// target houseCounts doc was never seeded — set-with-merge creates it on
-// the fly instead, so a missing seed doc can no longer break assignment.
+// IMPORTANT: the houseCounts security rules only allow read + update of
+// the 'count' field (allow create, delete: if false) — the client can
+// never create these documents. All 10 must be seeded by hand in the
+// Firestore console (or via the Admin SDK) before registration opens.
+// If a doc is missing, these functions will throw rather than silently
+// create one, since a client-side create would be rejected by the rules
+// anyway (permission-denied) or, worse, created without capacity/name/
+// gender fields if rules were ever loosened.
 // ============================================================
 
 import {
@@ -105,9 +109,7 @@ export async function createRegistrationWithHouse(db, docRef, payload) {
     const label  = houseLabel(gender, chosen.index);
 
     t.set(docRef, { ...payload, house: label, houseId: chosen.id });
-    // set + merge instead of update: creates the houseCounts doc if it
-    // was never seeded, instead of throwing "document doesn't exist".
-    t.set(chosen.ref, { count: increment(1) }, { merge: true });
+    t.update(chosen.ref, { count: increment(1) });
 
     return label;
   });
@@ -163,9 +165,7 @@ export async function assignHouseToExisting(db, docRef, gender) {
     const label  = houseLabel(gender, chosen.index);
 
     t.update(docRef, { house: label, houseId: chosen.id });
-    // set + merge instead of update: creates the houseCounts doc if it
-    // was never seeded, instead of throwing "document doesn't exist".
-    t.set(chosen.ref, { count: increment(1) }, { merge: true });
+    t.update(chosen.ref, { count: increment(1) });
 
     return label;
   });
@@ -186,12 +186,12 @@ export async function manuallySetHouse(db, docRef, /*oldHouseId*/ _, newHouseId,
 
     // Decrement old house if there was one and we're actually leaving it
     if (liveOldId && liveOldId !== newHouseId) {
-      t.set(doc(db, HOUSE_COUNTS_COLLECTION, liveOldId), { count: increment(-1) }, { merge: true });
+      t.update(doc(db, HOUSE_COUNTS_COLLECTION, liveOldId), { count: increment(-1) });
     }
 
     // Increment new house if we're moving to one
     if (newHouseId) {
-      t.set(doc(db, HOUSE_COUNTS_COLLECTION, newHouseId), { count: increment(1) }, { merge: true });
+      t.update(doc(db, HOUSE_COUNTS_COLLECTION, newHouseId), { count: increment(1) });
       const idx = getHouseIndex(newHouseId);
       const label = houseLabel(gender, idx);
       t.update(docRef, { house: label, houseId: newHouseId });
