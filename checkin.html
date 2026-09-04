@@ -78,6 +78,7 @@
   .recent-empty{color:var(--muted); font-size:13px; text-align:center; padding:4px 0;}
 
   .house-override{margin-top:18px; padding-top:16px; border-top:1px dashed var(--line);}
+  .payment-entry{margin-top:18px; padding-top:16px; border-top:1px dashed var(--line);}
   .house-summary-row{display:flex; justify-content:space-between; padding:8px 0; border-top:1px solid var(--line); font-size:13px;}
   .house-summary-row:first-child{border-top:none;}
   .house-summary-row .full{color:var(--red); font-weight:700;}
@@ -220,7 +221,13 @@
       <div class="row"><span class="k">Payment</span><span class="v" id="resPayment"></span></div>
       <div class="row hidden" id="resCheckedRow"><span class="k">Checked in</span><span class="v" id="resCheckedInfo"></span></div>
       <button type="button" class="btn-primary" id="confirmBtn" style="margin-top:18px;">Confirm Check-In</button>
-      <button type="button" class="btn-ghost" id="paymentToggleBtn" style="margin-top:8px;">Mark as Paid</button>
+
+      <div class="payment-entry">
+        <label for="amountPaidInput">Amount received (₦)</label>
+        <input type="number" id="amountPaidInput" placeholder="e.g. 2000" min="0" step="1">
+        <button type="button" class="btn-ghost" id="savePaymentBtn" style="margin-top:0;">Save Payment</button>
+        <p class="error" id="paymentError"></p>
+      </div>
 
       <div class="house-override">
         <label for="houseOverrideSelect">Move to a different house</label>
@@ -483,14 +490,13 @@ function renderResult(data) {
   document.getElementById("resAttending").textContent = data.attending || "—";
   document.getElementById("resHouse").textContent = data.house || "Not assigned yet";
 
-  const paymentToggleBtn = document.getElementById("paymentToggleBtn");
-  if (data.paid) {
-    document.getElementById("resPayment").innerHTML = '<span class="status-pill checked">Paid</span>';
-    paymentToggleBtn.textContent = "Mark as Not Paid";
+  const amountPaidInput = document.getElementById("amountPaidInput");
+  if (data.amountPaid && data.amountPaid > 0) {
+    document.getElementById("resPayment").innerHTML = '<span class="status-pill checked">' + formatNaira(data.amountPaid) + ' received</span>';
   } else {
     document.getElementById("resPayment").innerHTML = '<span class="status-pill not-checked">Not Paid</span>';
-    paymentToggleBtn.textContent = "Mark as Paid";
   }
+  amountPaidInput.value = data.amountPaid || "";
 
   const pillWrap = document.getElementById("statusPillWrap");
   const checkedRow = document.getElementById("resCheckedRow");
@@ -532,25 +538,35 @@ confirmBtn.addEventListener("click", async () => {
   }
 });
 
-const paymentToggleBtn = document.getElementById("paymentToggleBtn");
-paymentToggleBtn.addEventListener("click", async () => {
+const savePaymentBtn = document.getElementById("savePaymentBtn");
+const paymentError = document.getElementById("paymentError");
+savePaymentBtn.addEventListener("click", async () => {
+  paymentError.classList.remove("show");
   if (!currentDocRef || !currentData) return;
-  const newPaidValue = !currentData.paid;
-  paymentToggleBtn.disabled = true;
-  paymentToggleBtn.textContent = newPaidValue ? "Marking as paid…" : "Marking as not paid…";
+  const raw = document.getElementById("amountPaidInput").value;
+  const amount = raw === "" ? 0 : Number(raw);
+  if (raw !== "" && (isNaN(amount) || amount < 0)) {
+    paymentError.textContent = "Enter a valid amount.";
+    paymentError.classList.add("show");
+    return;
+  }
+  savePaymentBtn.disabled = true;
+  savePaymentBtn.textContent = "Saving…";
   try {
     await updateDoc(currentDocRef, {
-      paid: newPaidValue,
-      paidAt: newPaidValue ? serverTimestamp() : null,
-      paidBy: newPaidValue ? auth.currentUser.email : null
+      amountPaid: amount,
+      paidAt: amount > 0 ? serverTimestamp() : null,
+      paidBy: amount > 0 ? auth.currentUser.email : null
     });
-    currentData.paid = newPaidValue;
+    currentData.amountPaid = amount;
     renderResult(currentData);
   } catch (err) {
     console.error("Payment update failed:", err);
-    paymentToggleBtn.textContent = "Failed — tap to retry";
+    paymentError.textContent = "Couldn't save — check your connection and try again.";
+    paymentError.classList.add("show");
   } finally {
-    paymentToggleBtn.disabled = false;
+    savePaymentBtn.disabled = false;
+    savePaymentBtn.textContent = "Save Payment";
   }
 });
 
@@ -872,14 +888,6 @@ const paymentsTotalAmount = document.getElementById("paymentsTotalAmount");
 const paymentsUnpaidList = document.getElementById("paymentsUnpaidList");
 const paymentsUnpaidEmpty = document.getElementById("paymentsUnpaidEmpty");
 
-// Turns "₦2,000", "Others: ₦15000", "Invitee" into a plain number.
-// Anything it can't confidently parse counts as ₦0 rather than guessing.
-function parseFeeAmount(feeCategory) {
-  if (!feeCategory) return 0;
-  const match = String(feeCategory).replace(/,/g, "").match(/(\d+)/);
-  return match ? parseInt(match[1], 10) : 0;
-}
-
 function formatNaira(amount) {
   return "₦" + amount.toLocaleString("en-NG");
 }
@@ -893,9 +901,9 @@ async function loadPaymentsSummary() {
     let paidCount = 0, unpaidCount = 0, totalCollected = 0;
     const unpaid = [];
     all.forEach((r) => {
-      if (r.paid) {
+      if (r.amountPaid && r.amountPaid > 0) {
         paidCount++;
-        totalCollected += parseFeeAmount(r.feeCategory);
+        totalCollected += r.amountPaid;
       } else {
         unpaidCount++;
         unpaid.push(r);
