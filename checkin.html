@@ -51,11 +51,9 @@
   .status-pill.not-checked{background:rgba(194,68,68,0.12); color:var(--red);}
   .status-pill.checked{background:rgba(62,142,90,0.12); color:var(--green);}
   .not-found{color:var(--muted); font-size:14px; text-align:center; padding:8px 0;}
-
   .tab-bar{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px;}
   .tab-btn{flex:1 1 calc(50% - 4px); min-width:0; padding:11px 6px; border-radius:10px; border:1.5px solid var(--line); background:var(--card); color:var(--muted); font-size:12.5px; font-weight:700;}
   .tab-btn.active{border-color:var(--gold); color:var(--gold); background:rgba(200,149,26,0.08);}
-
   .opt-row{display:flex; gap:8px; margin-bottom:14px;}
   .opt-row label{flex:1; display:flex; align-items:center; justify-content:center; gap:6px; padding:12px; border-radius:10px; border:1.5px solid var(--line); font-size:13.5px; font-weight:600; color:var(--text-soft); cursor:pointer; margin:0;}
   .opt-row input{width:auto; margin:0; accent-color:var(--gold);}
@@ -63,22 +61,24 @@
   .check-row input{width:auto; margin:0; accent-color:var(--gold);}
   fieldset{border:none; padding:0; margin:0 0 4px;}
   legend{font-size:13px; font-weight:600; color:var(--text-soft); margin-bottom:6px; padding:0;}
-
   .dup-warning{background:rgba(200,149,26,0.08); border:1.5px solid var(--gold); border-radius:10px; padding:14px; margin-bottom:14px; font-size:13.5px; color:var(--text-soft);}
   .dup-warning b{display:block; color:var(--text); margin-bottom:8px;}
-
   .walkin-success{text-align:center;}
   .walkin-success .big-no{font-family:'Sora',sans-serif; font-size:26px; font-weight:800; color:var(--gold); margin:4px 0 2px;}
   .walkin-success .big-name{font-size:15px; font-weight:600; color:var(--text-soft); margin:0 0 16px;}
-
   .recent-list{list-style:none; margin:0; padding:0;}
   .recent-list li{display:flex; justify-content:space-between; padding:8px 0; border-top:1px solid var(--line); font-size:12.5px;}
   .recent-list li:first-child{border-top:none;}
   .recent-list .rn{font-weight:700; color:var(--gold);}
   .recent-empty{color:var(--muted); font-size:13px; text-align:center; padding:4px 0;}
-
   .house-override{margin-top:18px; padding-top:16px; border-top:1px dashed var(--line);}
   .payment-entry{margin-top:18px; padding-top:16px; border-top:1px dashed var(--line);}
+  .wa-send-btn{display:inline-block; padding:6px 12px; border-radius:8px; background:linear-gradient(135deg, var(--gold), var(--amber)); color:#fff; font-weight:700; font-size:12px; text-decoration:none; white-space:nowrap; flex-shrink:0;}
+  .wa-no-phone{color:var(--muted); font-size:12px; font-style:italic; flex-shrink:0;}
+  .wa-row{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:8px 0; border-top:1px solid var(--line); font-size:12.5px;}
+  .wa-row:first-child{border-top:none;}
+  textarea{width:100%; padding:13px 14px; border-radius:10px; border:1.5px solid var(--line); font-size:15px; margin-bottom:14px; font-family:inherit; resize:vertical; min-height:90px;}
+  textarea:focus{outline:none; border-color:var(--gold);}
   .house-summary-row{display:flex; justify-content:space-between; padding:8px 0; border-top:1px solid var(--line); font-size:13px;}
   .house-summary-row:first-child{border-top:none;}
   .house-summary-row .full{color:var(--red); font-weight:700;}
@@ -112,24 +112,22 @@
     <p class="error" id="loginError"></p>
     <button type="button" class="btn-primary" id="loginBtn">Log In</button>
   </div>
-
   <!-- CHECK-IN UI (hidden until logged in) -->
   <div id="deskArea" class="hidden">
     <div class="staff-bar">
       <span>Logged in as <b id="staffEmail"></b></span>
       <button type="button" class="btn-ghost" id="logoutBtn">Log out</button>
     </div>
-
     <div class="tab-bar">
       <button type="button" class="tab-btn active" id="tabCheckIn">Check-In</button>
       <button type="button" class="tab-btn" id="tabWalkin">Walk-in Registration</button>
       <button type="button" class="tab-btn" id="tabHouses">Houses</button>
       <button type="button" class="tab-btn" id="tabPayments">Payments</button>
+      <button type="button" class="tab-btn" id="tabWhatsapp">WhatsApp</button>
       <button type="button" class="tab-btn" id="tabList">Checked-In List</button>
       <button type="button" class="tab-btn" id="tabRegistered">Registered List</button>
       <button type="button" class="tab-btn" id="tabExport">Export</button>
     </div>
-
     <div id="listSection" class="hidden">
       <div class="card">
         <div class="staff-bar" style="margin-bottom:14px;">
@@ -141,7 +139,6 @@
         <p class="recent-empty" id="listEmpty">Tap Load / Refresh to see everyone checked in so far.</p>
       </div>
     </div>
-
     <div id="registeredSection" class="hidden">
       <div class="card">
         <div class="staff-bar" style="margin-bottom:14px;">
@@ -153,7 +150,6 @@
         <p class="recent-empty" id="registeredEmpty">Tap Refresh to see everyone registered so far.</p>
       </div>
     </div>
-
     <div id="housesSection" class="hidden">
       <div class="card">
         <div class="staff-bar" style="margin-bottom:14px;">
@@ -171,7 +167,6 @@
         <ul class="recent-list" id="assignHousesLog"></ul>
       </div>
     </div>
-
     <div id="exportSection" class="hidden">
       <div class="card">
         <label>All registrations</label>
@@ -180,7 +175,6 @@
         <button type="button" class="btn-ghost" id="exportBtn" style="margin-top:0;">Export to Excel</button>
       </div>
     </div>
-
     <div id="paymentsSection" class="hidden">
       <div class="card">
         <div class="staff-bar" style="margin-bottom:14px;">
@@ -199,7 +193,23 @@
         <p class="recent-empty" id="paymentsUnpaidEmpty">Tap Refresh to load.</p>
       </div>
     </div>
-
+    <div id="whatsappSection" class="hidden">
+      <div class="card">
+        <label for="waMessageInput">Message</label>
+        <textarea id="waMessageInput" placeholder="Hi {{name}}, thank you for joining us at NYC 2026!"></textarea>
+        <p style="font-size:12px; color:var(--muted); margin:-10px 0 14px;">Use <code>{{name}}</code> anywhere and it'll be swapped for each person's own name.</p>
+        <p class="error" id="waError"></p>
+        <button type="button" class="btn-primary" id="waGenerateBtn">Generate send list</button>
+      </div>
+      <div class="card">
+        <div class="staff-bar" style="margin-bottom:10px;">
+          <span id="waSummaryLabel">Not generated yet</span>
+        </div>
+        <p style="font-size:12px; color:var(--muted); margin:-4px 0 14px;">Tap Send next to a name — it opens WhatsApp on this device with the message ready. You still tap Send once more inside WhatsApp itself.</p>
+        <div id="waList"></div>
+        <p class="recent-empty" id="waEmpty">Type a message above and tap Generate send list.</p>
+      </div>
+    </div>
     <div id="checkInSection">
     <div class="card">
       <label for="regInput">Registration number</label>
@@ -207,7 +217,6 @@
       <p class="error" id="searchError"></p>
       <button type="button" class="btn-primary" id="searchBtn">Find</button>
     </div>
-
     <div class="card hidden" id="resultCard">
       <div id="statusPillWrap"></div>
       <p class="result-name" id="resName"></p>
@@ -240,11 +249,9 @@
     <div class="card hidden" id="notFoundCard">
       <p class="not-found">No registration found for that number. Double-check it, or have them registered manually and entered into the site later.</p>
     </div>
-    </div>
-
-    <!-- WALK-IN REGISTRATION (hidden until tab selected) -->
+        </div>
+        <!-- WALK-IN REGISTRATION (hidden until tab selected) -->
     <div id="walkinSection" class="hidden">
-
       <div class="card hidden" id="walkinDupWarning">
         <div class="dup-warning">
           <b>Already registered</b>
@@ -253,7 +260,6 @@
         <button type="button" class="btn-primary" id="dupGoToCheckInBtn">Go to Check-In</button>
         <button type="button" class="btn-ghost" id="dupDismissBtn">Enter different person</button>
       </div>
-
       <div class="card hidden" id="walkinSuccessCard">
         <div class="walkin-success">
           <span class="status-pill checked">Registered &amp; checked in</span>
@@ -263,11 +269,9 @@
           <button type="button" class="btn-primary" id="walkinAnotherBtn">Register Next Person</button>
         </div>
       </div>
-
       <form class="card" id="walkinForm">
         <label for="wFullName">Full Name</label>
         <input type="text" id="wFullName" required>
-
         <fieldset>
           <legend>Gender</legend>
           <div class="opt-row">
@@ -275,25 +279,18 @@
             <label><input type="radio" name="wGender" value="Female"> Female</label>
           </div>
         </fieldset>
-
         <label for="wDob">Date of Birth</label>
         <input type="date" id="wDob" required>
-
         <label for="wPhone">Phone / WhatsApp Number</label>
         <input type="tel" id="wPhone" required placeholder="0803 123 4567">
-
         <label for="wChurch">Church / Assembly</label>
         <input type="text" id="wChurch" required>
-
         <label for="wBranch">Branch / Location</label>
         <input type="text" id="wBranch" required>
-
         <label for="wState">State of Residence</label>
         <input type="text" id="wState" required>
-
         <label for="wOccupation">Occupation / School</label>
         <input type="text" id="wOccupation" required>
-
         <fieldset>
           <legend>Attending in person?</legend>
           <div class="opt-row">
@@ -301,7 +298,6 @@
             <label><input type="radio" name="wAttending" value="No"> No</label>
           </div>
         </fieldset>
-
         <label for="wFee">Registration Category</label>
         <select id="wFee" required>
           <option value="">Select…</option>
@@ -317,7 +313,6 @@
           <label for="wFeeOtherAmount">Specify amount (₦)</label>
           <input type="number" id="wFeeOtherAmount">
         </div>
-
         <fieldset>
           <legend>Interested in volunteering?</legend>
           <div class="opt-row">
@@ -337,24 +332,19 @@
             <option>Security / Protocol</option>
           </select>
         </div>
-
         <div class="check-row">
           <input type="checkbox" id="wMarkCheckedIn" checked>
           <label for="wMarkCheckedIn" style="margin:0;">Mark as checked in now (they're here at the desk)</label>
         </div>
-
         <p class="error" id="walkinError"></p>
         <button type="submit" class="btn-primary" id="walkinSubmitBtn">Register Walk-in</button>
       </form>
-
       <div class="card" id="recentCard">
         <label style="margin-bottom:10px;">Registered this session</label>
         <ul class="recent-list" id="recentList"></ul>
         <p class="recent-empty" id="recentEmpty">None yet.</p>
       </div>
-
     </div>
-
   </div>
 
 </div>
@@ -382,11 +372,9 @@ const firebaseConfig = {
   appId: "1:668244488462:web:b2f2612cfb5159ef01275f"
 };
 const REGISTRATIONS_COLLECTION = "registrations";
-
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-
 const loginCard = document.getElementById("loginCard");
 const deskArea = document.getElementById("deskArea");
 const loginEmail = document.getElementById("loginEmail");
@@ -401,10 +389,8 @@ const searchError = document.getElementById("searchError");
 const resultCard = document.getElementById("resultCard");
 const notFoundCard = document.getElementById("notFoundCard");
 const confirmBtn = document.getElementById("confirmBtn");
-
 let currentDocRef = null;
 let currentData = null;
-
 onAuthStateChanged(auth, (user) => {
   if (user && user.email) {
     loginCard.classList.add("hidden");
@@ -415,7 +401,6 @@ onAuthStateChanged(auth, (user) => {
     deskArea.classList.add("hidden");
   }
 });
-
 loginBtn.addEventListener("click", async () => {
   loginError.classList.remove("show");
   loginBtn.disabled = true;
@@ -430,20 +415,17 @@ loginBtn.addEventListener("click", async () => {
     loginBtn.textContent = "Log In";
   }
 });
-
 logoutBtn.addEventListener("click", async () => {
   await signOut(auth);
   regInput.value = "";
   resultCard.classList.add("hidden");
   notFoundCard.classList.add("hidden");
 });
-
 function normalizeRegNumber(raw) {
   let v = raw.trim().toUpperCase();
   if (v && !v.startsWith("NYC26-")) v = "NYC26-" + v;
   return v;
 }
-
 async function doSearch() {
   searchError.classList.remove("show");
   resultCard.classList.add("hidden");
@@ -479,7 +461,6 @@ async function doSearch() {
     searchBtn.textContent = "Find";
   }
 }
-
 function renderResult(data) {
   document.getElementById("resName").textContent = data.fullName || "—";
   document.getElementById("resNo").textContent = data.regNumber || "—";
@@ -489,7 +470,6 @@ function renderResult(data) {
   document.getElementById("resCategory").textContent = data.feeCategory || "—";
   document.getElementById("resAttending").textContent = data.attending || "—";
   document.getElementById("resHouse").textContent = data.house || "Not assigned yet";
-
   const amountPaidInput = document.getElementById("amountPaidInput");
   if (data.amountPaid && data.amountPaid > 0) {
     document.getElementById("resPayment").innerHTML = '<span class="status-pill checked">' + formatNaira(data.amountPaid) + ' received</span>';
@@ -497,11 +477,9 @@ function renderResult(data) {
     document.getElementById("resPayment").innerHTML = '<span class="status-pill not-checked">Not Paid</span>';
   }
   amountPaidInput.value = data.amountPaid || "";
-
   const pillWrap = document.getElementById("statusPillWrap");
   const checkedRow = document.getElementById("resCheckedRow");
   const checkedInfo = document.getElementById("resCheckedInfo");
-
   if (data.checkedIn) {
     pillWrap.innerHTML = '<span class="status-pill checked">Already checked in</span>';
     checkedRow.classList.remove("hidden");
@@ -537,8 +515,7 @@ confirmBtn.addEventListener("click", async () => {
     confirmBtn.disabled = false;
   }
 });
-
-const savePaymentBtn = document.getElementById("savePaymentBtn");
+  const savePaymentBtn = document.getElementById("savePaymentBtn");
 const paymentError = document.getElementById("paymentError");
 savePaymentBtn.addEventListener("click", async () => {
   paymentError.classList.remove("show");
@@ -569,11 +546,9 @@ savePaymentBtn.addEventListener("click", async () => {
     savePaymentBtn.textContent = "Save Payment";
   }
 });
-
 searchBtn.addEventListener("click", doSearch);
 regInput.addEventListener("keydown", (e) => { if (e.key === "Enter") doSearch(); });
 loginPass.addEventListener("keydown", (e) => { if (e.key === "Enter") loginBtn.click(); });
-
 const pwToggle = document.getElementById("pwToggle");
 const pwIconEye = document.getElementById("pwIconEye");
 const pwIconEyeOff = document.getElementById("pwIconEyeOff");
@@ -584,24 +559,20 @@ pwToggle.addEventListener("click", () => {
   pwIconEyeOff.style.display = showing ? "none" : "";
   pwToggle.setAttribute("aria-label", showing ? "Show password" : "Hide password");
 });
-
 /* ================= HOUSE OVERRIDE (manual edge cases) ================= */
 const houseOverrideSelect = document.getElementById("houseOverrideSelect");
 const houseOverrideBtn = document.getElementById("houseOverrideBtn");
 const houseOverrideError = document.getElementById("houseOverrideError");
-
 function populateHouseOverrideSelect(data) {
   houseOverrideSelect.innerHTML = "";
   const blank = document.createElement("option");
   blank.value = "";
   blank.textContent = "Select…";
   houseOverrideSelect.appendChild(blank);
-
   const pendingOpt = document.createElement("option");
   pendingOpt.value = "__pending__";
   pendingOpt.textContent = "Pending (unassign)";
   houseOverrideSelect.appendChild(pendingOpt);
-
   if (!data.gender) return;
   houseIdsForGender(data.gender).forEach((id, i) => {
     const opt = document.createElement("option");
@@ -611,7 +582,6 @@ function populateHouseOverrideSelect(data) {
   });
   houseOverrideSelect.value = data.houseId || "";
 }
-
 houseOverrideBtn.addEventListener("click", async () => {
   houseOverrideError.classList.remove("show");
   if (!currentDocRef || !currentData) return;
@@ -638,12 +608,12 @@ houseOverrideBtn.addEventListener("click", async () => {
     houseOverrideBtn.textContent = "Move";
   }
 });
-
 /* ================= TABS ================= */
 const tabCheckIn = document.getElementById("tabCheckIn");
 const tabWalkin = document.getElementById("tabWalkin");
 const tabHouses = document.getElementById("tabHouses");
 const tabPayments = document.getElementById("tabPayments");
+const tabWhatsapp = document.getElementById("tabWhatsapp");
 const tabList = document.getElementById("tabList");
 const tabRegistered = document.getElementById("tabRegistered");
 const tabExport = document.getElementById("tabExport");
@@ -651,15 +621,16 @@ const checkInSection = document.getElementById("checkInSection");
 const walkinSection = document.getElementById("walkinSection");
 const housesSection = document.getElementById("housesSection");
 const paymentsSection = document.getElementById("paymentsSection");
+const whatsappSection = document.getElementById("whatsappSection");
 const listSection = document.getElementById("listSection");
 const registeredSection = document.getElementById("registeredSection");
 const exportSection = document.getElementById("exportSection");
-
 function showTab(tab) {
   tabCheckIn.classList.toggle("active", tab === "checkin");
   tabWalkin.classList.toggle("active", tab === "walkin");
   tabHouses.classList.toggle("active", tab === "houses");
   tabPayments.classList.toggle("active", tab === "payments");
+  tabWhatsapp.classList.toggle("active", tab === "whatsapp");
   tabList.classList.toggle("active", tab === "list");
   tabRegistered.classList.toggle("active", tab === "registered");
   tabExport.classList.toggle("active", tab === "export");
@@ -667,6 +638,7 @@ function showTab(tab) {
   walkinSection.classList.toggle("hidden", tab !== "walkin");
   housesSection.classList.toggle("hidden", tab !== "houses");
   paymentsSection.classList.toggle("hidden", tab !== "payments");
+  whatsappSection.classList.toggle("hidden", tab !== "whatsapp");
   listSection.classList.toggle("hidden", tab !== "list");
   registeredSection.classList.toggle("hidden", tab !== "registered");
   exportSection.classList.toggle("hidden", tab !== "export");
@@ -675,10 +647,10 @@ tabCheckIn.addEventListener("click", () => showTab("checkin"));
 tabWalkin.addEventListener("click", () => showTab("walkin"));
 tabHouses.addEventListener("click", () => showTab("houses"));
 tabPayments.addEventListener("click", () => showTab("payments"));
+tabWhatsapp.addEventListener("click", () => showTab("whatsapp"));
 tabList.addEventListener("click", () => showTab("list"));
 tabRegistered.addEventListener("click", () => showTab("registered"));
 tabExport.addEventListener("click", () => showTab("export"));
-
 /* ================= CHECKED-IN LIST ================= */
 // The security rules cap every list query at 5 docs, so this pages
 // through in batches of 5 (ordered by most recent check-in first) and
@@ -690,12 +662,10 @@ const listLoadBtn = document.getElementById("listLoadBtn");
 const listError = document.getElementById("listError");
 const checkedInList = document.getElementById("checkedInList");
 const listEmpty = document.getElementById("listEmpty");
-
 function formatCheckInTime(ts) {
   if (!ts || typeof ts.toDate !== "function") return "—";
   return ts.toDate().toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 }
-
 async function loadCheckedInList() {
   listLoadBtn.disabled = true;
   listLoadBtn.textContent = "Loading…";
@@ -723,9 +693,8 @@ async function loadCheckedInList() {
     listLoadBtn.disabled = false;
     listLoadBtn.textContent = "Refresh";
   }
-}
-
-function renderCheckedInList(results) {
+  }
+  function renderCheckedInList(results) {
   checkedInList.innerHTML = "";
   listEmpty.classList.toggle("hidden", results.length > 0);
   listCount.textContent = results.length + " checked in";
@@ -735,9 +704,7 @@ function renderCheckedInList(results) {
     checkedInList.appendChild(li);
   });
 }
-
 listLoadBtn.addEventListener("click", loadCheckedInList);
-
 /* ================= REGISTERED LIST ================= */
 // Same batching approach as the Checked-In List and Export — pages through
 // in groups of 5 (the security-rule cap) ordered by most recent signup
@@ -749,7 +716,6 @@ const registeredLoadBtn = document.getElementById("registeredLoadBtn");
 const registeredError = document.getElementById("registeredError");
 const registeredListEl = document.getElementById("registeredList");
 const registeredEmpty = document.getElementById("registeredEmpty");
-
 async function loadRegisteredList() {
   registeredLoadBtn.disabled = true;
   registeredLoadBtn.textContent = "Loading…";
@@ -766,7 +732,6 @@ async function loadRegisteredList() {
     registeredLoadBtn.textContent = "Refresh";
   }
 }
-
 function renderRegisteredList(results) {
   registeredListEl.innerHTML = "";
   registeredEmpty.classList.toggle("hidden", results.length > 0);
@@ -777,9 +742,7 @@ function renderRegisteredList(results) {
     registeredListEl.appendChild(li);
   });
 }
-
 registeredLoadBtn.addEventListener("click", loadRegisteredList);
-
 /* ================= HOUSES TAB ================= */
 // Live capacity summary (read-only) + the one-time catch-up batch for
 // anyone who registered before this feature existed.
@@ -790,7 +753,6 @@ const housesSummaryList = document.getElementById("housesSummaryList");
 const assignHousesBtn = document.getElementById("assignHousesBtn");
 const assignHousesError = document.getElementById("assignHousesError");
 const assignHousesLog = document.getElementById("assignHousesLog");
-
 async function loadHousesSummary() {
   housesRefreshBtn.disabled = true;
   housesRefreshBtn.textContent = "Loading…";
@@ -828,7 +790,6 @@ async function loadHousesSummary() {
   }
 }
 housesRefreshBtn.addEventListener("click", loadHousesSummary);
-
 function shuffleInPlace(arr) {
   for (let i = arr.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -836,7 +797,6 @@ function shuffleInPlace(arr) {
   }
   return arr;
 }
-
 assignHousesBtn.addEventListener("click", async () => {
   assignHousesError.classList.remove("show");
   assignHousesLog.innerHTML = "";
@@ -874,7 +834,6 @@ assignHousesBtn.addEventListener("click", async () => {
     assignHousesBtn.textContent = "Assign houses now";
   }
 });
-
 /* ================= PAYMENTS TAB ================= */
 // Totals paid/not-paid and sums the amount collected, in the same style
 // as Registered List — reuses fetchAllRegistrations() (defined further
@@ -887,11 +846,9 @@ const paymentsUnpaidCount = document.getElementById("paymentsUnpaidCount");
 const paymentsTotalAmount = document.getElementById("paymentsTotalAmount");
 const paymentsUnpaidList = document.getElementById("paymentsUnpaidList");
 const paymentsUnpaidEmpty = document.getElementById("paymentsUnpaidEmpty");
-
 function formatNaira(amount) {
   return "₦" + amount.toLocaleString("en-NG");
 }
-
 async function loadPaymentsSummary() {
   paymentsRefreshBtn.disabled = true;
   paymentsRefreshBtn.textContent = "Loading…";
@@ -929,9 +886,80 @@ async function loadPaymentsSummary() {
     paymentsRefreshBtn.disabled = false;
     paymentsRefreshBtn.textContent = "Refresh";
   }
+  }
+  paymentsRefreshBtn.addEventListener("click", loadPaymentsSummary);
+/* ================= WHATSAPP FOLLOW-UP ================= */
+// Builds a wa.me click-to-chat link per registrant from the staff's typed
+// message. This does NOT send anything on its own — clicking a generated
+// link opens WhatsApp on whatever device/account is currently logged in,
+// with the message pre-filled, and a human still taps Send inside
+// WhatsApp itself. There is no way to route this through one specific
+// number automatically — the "from" number is simply whoever is logged
+// in on the device doing the clicking.
+const waMessageInput = document.getElementById("waMessageInput");
+const waGenerateBtn = document.getElementById("waGenerateBtn");
+const waError = document.getElementById("waError");
+const waSummaryLabel = document.getElementById("waSummaryLabel");
+const waList = document.getElementById("waList");
+const waEmpty = document.getElementById("waEmpty");
+// Nigerian numbers are stored as digits-only in phoneNorm, typically
+// starting with a local "0" (e.g. 08031234567). wa.me needs the full
+// international number with no leading 0 (e.g. 2348031234567). Numbers
+// already carrying a country code are left as-is.
+function toWhatsAppNumber(phoneNorm) {
+  if (!phoneNorm) return null;
+  let n = phoneNorm;
+  if (n.startsWith("0")) {
+    n = "234" + n.slice(1);
+  } else if (!n.startsWith("234") && n.length === 10) {
+    n = "234" + n;
+  }
+  return n;
 }
-paymentsRefreshBtn.addEventListener("click", loadPaymentsSummary);
-
+function buildWaLink(phoneNorm, message) {
+  const waNumber = toWhatsAppNumber(phoneNorm);
+  if (!waNumber) return null;
+  return "https://wa.me/" + waNumber + "?text=" + encodeURIComponent(message);
+}
+waGenerateBtn.addEventListener("click", async () => {
+  waError.classList.remove("show");
+  const template = waMessageInput.value.trim();
+  if (!template) {
+    waError.textContent = "Type a message first.";
+    waError.classList.add("show");
+    return;
+  }
+  waGenerateBtn.disabled = true;
+  waGenerateBtn.textContent = "Loading registrations…";
+  try {
+    const all = await fetchAllRegistrations();
+    waList.innerHTML = "";
+    waEmpty.classList.toggle("hidden", all.length > 0);
+    let withPhone = 0, withoutPhone = 0;
+    all.forEach((r) => {
+      const personalized = template.split("{{name}}").join(r.fullName || "there");
+      const link = buildWaLink(r.phoneNorm, personalized);
+      const row = document.createElement("div");
+      row.className = "wa-row";
+      if (link) {
+        withPhone++;
+        row.innerHTML = `<span>${r.fullName || "—"} <span style="color:var(--muted)">· ${r.phone || "—"}</span></span><a href="${link}" target="_blank" rel="noopener" class="wa-send-btn">Send</a>`;
+      } else {
+        withoutPhone++;
+        row.innerHTML = `<span>${r.fullName || "—"}</span><span class="wa-no-phone">no phone recorded</span>`;
+      }
+      waList.appendChild(row);
+    });
+    waSummaryLabel.textContent = withPhone + " reachable" + (withoutPhone > 0 ? " · " + withoutPhone + " without a phone number" : "");
+  } catch (err) {
+    console.error("Building WhatsApp list failed:", err);
+    waError.textContent = "Couldn't load registrations — check your connection and try again.";
+    waError.classList.add("show");
+  } finally {
+    waGenerateBtn.disabled = false;
+    waGenerateBtn.textContent = "Generate send list";
+  }
+});
 /* ================= WALK-IN REGISTRATION ================= */
 // Lets the registration unit get someone into the system on the spot —
 // same schema and the same duplicate check the public form uses, so it
@@ -943,7 +971,6 @@ paymentsRefreshBtn.addEventListener("click", loadPaymentsSummary);
 // allowed call (update, staff-only, checkedIn/checkedInAt/checkedInBy
 // only) to check them in immediately, since standing at the desk being
 // entered IS their check-in.
-
 const walkinForm = document.getElementById("walkinForm");
 const walkinError = document.getElementById("walkinError");
 const walkinSubmitBtn = document.getElementById("walkinSubmitBtn");
@@ -961,10 +988,8 @@ const wFeeOtherBlock = document.getElementById("wFeeOtherBlock");
 const wFeeOtherAmount = document.getElementById("wFeeOtherAmount");
 const recentList = document.getElementById("recentList");
 const recentEmpty = document.getElementById("recentEmpty");
-
 let pendingDupRegNumber = null;
 const sessionRegistered = []; // in-memory only — resets on page reload, by design
-
 wFee.addEventListener("change", () => {
   wFeeOtherBlock.classList.toggle("hidden", wFee.value !== "Others");
 });
@@ -973,7 +998,6 @@ document.querySelectorAll('input[name="wVolunteer"]').forEach((r) => {
     document.getElementById("wVolunteerBlock").classList.toggle("hidden", r.value !== "Yes");
   });
 });
-
 function renderRecentList() {
   recentList.innerHTML = "";
   recentEmpty.classList.toggle("hidden", sessionRegistered.length > 0);
@@ -983,7 +1007,6 @@ function renderRecentList() {
     recentList.appendChild(li);
   });
 }
-
 function resetWalkinForm() {
   walkinForm.reset();
   wFeeOtherBlock.classList.add("hidden");
@@ -991,13 +1014,11 @@ function resetWalkinForm() {
   document.getElementById("wMarkCheckedIn").checked = true;
   walkinError.classList.remove("show");
 }
-
 walkinForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   walkinError.classList.remove("show");
   walkinDupWarning.classList.add("hidden");
   walkinSuccessCard.classList.add("hidden");
-
   const fullName = document.getElementById("wFullName").value.trim();
   const gender = walkinForm.querySelector('input[name="wGender"]:checked');
   const dob = document.getElementById("wDob").value;
@@ -1010,7 +1031,6 @@ walkinForm.addEventListener("submit", async (e) => {
   const volunteer = walkinForm.querySelector('input[name="wVolunteer"]:checked');
   const volunteerUnit = document.getElementById("wVolunteerUnit").value;
   const markCheckedIn = document.getElementById("wMarkCheckedIn").checked;
-
   if (!fullName || !phone || !gender || !attending || !volunteer) {
     walkinError.textContent = "Please fill in all required fields.";
     walkinError.classList.add("show");
@@ -1042,8 +1062,7 @@ walkinForm.addEventListener("submit", async (e) => {
       dupText.textContent = `${existing.fullName} is already registered as ${existing.regNumber}. Use Check-In instead of creating a new record.`;
       walkinDupWarning.classList.remove("hidden");
       return;
-    }
-
+  }
     const docRef = doc(collection(db, REGISTRATIONS_COLLECTION));
     const regNumber = "NYC26-" + docRef.id.slice(0, 6).toUpperCase();
     const payload = {
@@ -1062,10 +1081,8 @@ walkinForm.addEventListener("submit", async (e) => {
       submittedAt: serverTimestamp()
     };
     await setDoc(docRef, payload);
-
     // Same random-with-overflow-protection assignment as the public form.
     const house = await assignHouseToExisting(db, docRef, gender.value);
-
     if (markCheckedIn) {
       await updateDoc(docRef, {
         checkedIn: true,
@@ -1073,10 +1090,8 @@ walkinForm.addEventListener("submit", async (e) => {
         checkedInBy: auth.currentUser.email
       });
     }
-
     sessionRegistered.push({ name: fullName, regNumber, house });
     renderRecentList();
-
     walkinSuccessNo.textContent = regNumber;
     walkinSuccessName.textContent = fullName;
     walkinSuccessHouse.textContent = house;
@@ -1091,7 +1106,6 @@ walkinForm.addEventListener("submit", async (e) => {
     walkinSubmitBtn.textContent = "Register Walk-in";
   }
 });
-
 dupGoToCheckInBtn.addEventListener("click", () => {
   walkinDupWarning.classList.add("hidden");
   showTab("checkin");
@@ -1106,7 +1120,6 @@ dupDismissBtn.addEventListener("click", () => {
 walkinAnotherBtn.addEventListener("click", () => {
   walkinSuccessCard.classList.add("hidden");
 });
-
 /* ================= EXPORT TO EXCEL ================= */
 // Reuses the same paged-batches-of-5 approach as the Checked-In List, since
 // the security rules cap every list query at 5 docs for anyone without a
@@ -1114,12 +1127,10 @@ walkinAnotherBtn.addEventListener("click", () => {
 // checked-in ones, so no orderBy/where filter here.
 const exportBtn = document.getElementById("exportBtn");
 const exportError = document.getElementById("exportError");
-
 function formatTimestamp(ts) {
   if (!ts || typeof ts.toDate !== "function") return "";
   return ts.toDate().toLocaleString("en-NG", { dateStyle: "medium", timeStyle: "short" });
 }
-
 async function fetchAllRegistrations() {
   const results = [];
   let lastDoc = null;
@@ -1136,7 +1147,6 @@ async function fetchAllRegistrations() {
   }
   return results;
 }
-
 exportBtn.addEventListener("click", async () => {
   exportError.classList.remove("show");
   if (typeof XLSX === "undefined") {
@@ -1148,7 +1158,6 @@ exportBtn.addEventListener("click", async () => {
   exportBtn.textContent = "Fetching registrations…";
   try {
     const all = await fetchAllRegistrations();
-
     if (all.length === 0) {
       exportError.textContent = "No registrations found yet.";
       exportError.classList.add("show");
